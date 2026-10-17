@@ -5,7 +5,8 @@ import { toonMaterial } from '../../core/toon.js';
 
 export function buildCivilWorks(root) {
   const g = group('connected-streets');
-  const colors = { paving: '#aba58e', lane: '#92927c', prom: '#9fa896', road: '#69746f', path: '#a39a7a', steps: '#99a38f' };
+  // dusty sandstone, worn lime-concrete and sun-bleached asphalt
+  const colors = { paving: '#a48c6a', lane: '#8c806a', prom: '#988e7a', road: '#5f5b53', path: '#9e8a6a', steps: '#978b78' };
   for (const r of activeRoutes()) {
     ribbon(g, r.points, r.width, colors[r.material], { name: r.id, steps: r.material === 'steps' });
     if (r.material === 'road' || r.material === 'paving') {
@@ -13,21 +14,21 @@ export function buildCivilWorks(root) {
       // bends. It is a surface edge, not a string of inked floating slabs.
       for (const side of [-1, 1]) {
         const edge = offsetPoints(r.points, side * (r.width / 2 + 0.12));
-        ribbon(g, edge, 0.19, '#a5aa97', { lift: 0.028, name: `${r.id}-drain` });
+        ribbon(g, edge, 0.19, '#8f897a', { lift: 0.028, name: `${r.id}-drain` });
       }
     }
     if (r.material === 'steps') buildTrailSteps(g, r);
     if (r.stage !== 'river' && r.material !== 'steps') buildCutFill(g, r);
   }
-  box(g, SQUARE.x1 - SQUARE.x0, 0.07, SQUARE.z1 - SQUARE.z0, '#a5a18b',
+  box(g, SQUARE.x1 - SQUARE.x0, 0.07, SQUARE.z1 - SQUARE.z0, '#a88f6a',
     (SQUARE.x0 + SQUARE.x1) / 2, -0.025, (SQUARE.z0 + SQUARE.z1) / 2, 'station-forecourt');
   // Sparse paving joints establish the scale of the square without gridding
   // every road surface or putting clutter on the navigation axis.
-  for (let x = -14; x < 15; x += 2) box(g, 0.014, 0.005, 12.5, '#939b86', x, 0.019, -1);
-  for (let z = -6.5; z < 5; z += 2) box(g, 29, 0.005, 0.014, '#939b86', 0, 0.019, z);
+  for (let x = -14; x < 15; x += 2) box(g, 0.014, 0.005, 12.5, '#7c7262', x, 0.019, -1);
+  for (let z = -6.5; z < 5; z += 2) box(g, 29, 0.005, 0.014, '#7c7262', 0, 0.019, z);
   // Step-free, open platform passage and the eastern baggage ramp.
-  ribbon(g, [[0, 0, -7.5], [0, 0.8, -15]], 2.8, '#9c9d8c', { height: null, lift: 0.025, name: 'station-passage-ramp' });
-  ribbon(g, [[12, 0, -9.5], [12, 0.8, -15.8]], 2.7, '#a5a897', { height: null, lift: 0.025, name: 'platform-side-ramp' });
+  ribbon(g, [[0, 0, -7.5], [0, 0.8, -15]], 2.8, '#958a76', { height: null, lift: 0.025, name: 'station-passage-ramp' });
+  ribbon(g, [[12, 0, -9.5], [12, 0.8, -15.8]], 2.7, '#9a8f7a', { height: null, lift: 0.025, name: 'platform-side-ramp' });
   root.add(g); return g;
 }
 
