@@ -8,9 +8,10 @@ export function createGround(scene) {
   const x0 = -128, z0 = -120, nx = 256, nz = 232;
   const vertices = [], colors = [], indices = [];
   const palette = {
-    grass: '#4e9a36', rock: '#6e9a48', road: '#7a7468', lane: '#b8a27a', path: '#c2a173',
-    paving: '#c4b89a', plaza: '#c4b89a', prom: '#b7ae96', ballast: '#7a7670',
-    deck: '#b8b3a4', bed: '#3d6a6a', sand: '#d6c08e', steps: '#b2a68e', field: '#7a5a36',
+    // late-season North Indian ground: olive, sun-dried grass, dusty earth
+    grass: '#5d7a38', rock: '#76784c', road: '#6e695e', lane: '#a8916c', path: '#b09068',
+    paving: '#b0a68e', plaza: '#b0a68e', prom: '#a59c88', ballast: '#6e6a62',
+    deck: '#a8a294', bed: '#4a5244', sand: '#c2ad84', steps: '#a49882', field: '#6e5236',
   };
   const c = new THREE.Color();
   for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) {
@@ -20,8 +21,9 @@ export function createGround(scene) {
     c.set(palette[type] ?? palette.grass);
     const cover = fbm(x * 0.13 + 4, z * 0.13), broad = fbm(x * 0.037, z * 0.035);
     c.multiplyScalar(0.83 + cover * 0.17 + broad * 0.06);
-    if (type === 'rock') c.lerp(new THREE.Color('#9a8a5a'), Math.max(0, broad - 0.45) * 0.8);
-    if (type === 'grass') c.lerp(new THREE.Color('#8fbf3e'), Math.max(0, cover - 0.55) * 1.1).lerp(new THREE.Color('#2f7a34'), Math.max(0, 0.55 - broad) * 0.7);
+    if (type === 'rock') c.lerp(new THREE.Color('#9a8a62'), Math.max(0, broad - 0.45) * 0.8);
+    // dry, straw-coloured patches and darker damp-green hollows
+    if (type === 'grass') c.lerp(new THREE.Color('#9a9450'), Math.max(0, cover - 0.55) * 1.1).lerp(new THREE.Color('#3e6230'), Math.max(0, 0.55 - broad) * 0.7);
     colors.push(c.r, c.g, c.b);
     if (j < nz && i < nx) {
       const a = j * (nx + 1) + i, b = a + 1, d = a + nx + 1, e = d + 1;
@@ -31,7 +33,7 @@ export function createGround(scene) {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
   geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3)); geo.setIndex(indices); geo.computeVertexNormals();
-  const mesh = new THREE.Mesh(geo, toonMaterial(0xffffff, { vertexColors: true, paint: 0.035 }));
+  const mesh = new THREE.Mesh(geo, toonMaterial(0xffffff, { vertexColors: true, paint: 0.06, surface: 'earth' }));
   mesh.name = 'valley-terrain'; mesh.receiveShadow = true; scene.add(mesh);
   return { mesh };
 }

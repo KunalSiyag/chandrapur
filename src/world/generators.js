@@ -578,7 +578,7 @@ export function makeRailwayStation({ seed = 1 } = {}) {
     ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(64, 64); ctx.lineTo(56, 30); ctx.moveTo(64, 64); ctx.lineTo(93, 54); ctx.stroke();
   });
   for (let i = 0; i < 4; i++) {
-    const clock = plane(g, 1.08, 1.08, new THREE.MeshBasicMaterial({ map: clockTex }), -4.65, 6.62, -0.62); clock.rotation.y = i * Math.PI / 2;
+    const clock = plane(g, 1.08, 1.08, toonMaterial(0xffffff, { paint: 0.015, map: clockTex }), -4.65, 6.62, -0.62); clock.rotation.y = i * Math.PI / 2;
     clock.position.x += Math.sin(i * Math.PI / 2) * 0.685; clock.position.z += Math.cos(i * Math.PI / 2) * 0.685;
   }
   const cap = makeSlateRoof({ w: 1.65, d: 1.65, rise: 0.55, seed }); cap.position.set(-4.65, 7.28, -0.62); g.add(cap);

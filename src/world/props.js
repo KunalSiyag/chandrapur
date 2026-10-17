@@ -3,7 +3,7 @@ import { toonMaterial } from '../core/toon.js';
 import { groundHeight } from './layout.js';
 
 // ============================================================
-// Street furniture — Chandpur edition. One generator per class,
+// Street furniture — Chandrapur edition. One generator per class,
 // placed by hand where a composition or a story needs it. All
 // signboards are hand-painted at runtime with Canvas2D — Hindi
 // on top, English underneath, the way a real town paints them.
@@ -41,7 +41,7 @@ export function textSign({ text, sub = '', w = 4, h = 1.1, bg = '#1c3a6e', fg = 
   });
   const m = new THREE.Mesh(
     new THREE.PlaneGeometry(w, h),
-    new THREE.MeshBasicMaterial({ map: tex }),
+    toonMaterial(0xffffff, { paint: 0.015, map: tex }),
   );
   m.name = 'sign';
   return m;
@@ -65,7 +65,7 @@ export function poster({ title, lines = [], w = 0.9, h = 1.2, hue = '#f2e6c8', t
   });
   const m = new THREE.Mesh(
     new THREE.PlaneGeometry(w, h),
-    new THREE.MeshBasicMaterial({ map: tex }),
+    toonMaterial(0xffffff, { paint: 0.015, map: tex }),
   );
   m.name = 'poster';
   return m;
@@ -83,7 +83,7 @@ export function timetable({ w = 1.9, h = 1.15 } = {}) {
     const rows = [['6035 UP', '22:15', 'last ▲'], ['6036 DN', '05:40', 'first ▼'], ['—', '—', 'passenger halt']];
     rows.forEach((r, i) => ctx.fillText(`${r[0]}  ${r[1]}  ${r[2]}`, 14, 42 + i * 30));
   });
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex }));
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), toonMaterial(0xffffff, { paint: 0.015, map: tex }));
   m.name = 'timetable';
   return m;
 }
@@ -848,7 +848,7 @@ export function rangoli({ r = 1.1, seed = 1 } = {}) {
   });
   const m = new THREE.Mesh(
     new THREE.CircleGeometry(r, 28),
-    new THREE.MeshBasicMaterial({ map: tex, transparent: true, polygonOffset: true, polygonOffsetFactor: -2 }),
+    toonMaterial(0xffffff, { paint: 0.015, map: tex, transparent: true, polygonOffset: true, polygonOffsetFactor: -2 }),
   );
   m.rotation.x = -Math.PI / 2;
   m.renderOrder = 1;

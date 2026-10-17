@@ -23,7 +23,8 @@ export function createMoon(scene) {
   const tex = makeMoonTexture();
   const disc = new THREE.Mesh(
     new THREE.CircleGeometry(6.5, 72),
-    new THREE.MeshBasicMaterial({ map: tex, fog: false }),
+    // HDR: the disc sits a few stops above the night exposure so she blooms softly
+    new THREE.MeshBasicMaterial({ map: tex, fog: false, color: new THREE.Color(0.48, 0.48, 0.48) }),
   );
   disc.name = 'moon-disc';
   group.add(disc);
@@ -32,7 +33,7 @@ export function createMoon(scene) {
   const halo = new THREE.Mesh(
     new THREE.CircleGeometry(7.1, 48),
     new THREE.MeshBasicMaterial({
-      color: 0xcfd8ec, transparent: true, opacity: 0.16,
+      color: 0xcfd8ec, transparent: true, opacity: 0.012,
       blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
     }),
   );
@@ -42,7 +43,7 @@ export function createMoon(scene) {
 
   // ---- the big soft moonglow behind her ----
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: makeGlowTexture(), transparent: true, opacity: 0.5, depthWrite: false,
+    map: makeGlowTexture(), transparent: true, opacity: 0.1, depthWrite: false,
     blending: THREE.AdditiveBlending, color: 0xfff2c0, fog: false,
   }));
   glow.scale.setScalar(20);
@@ -80,7 +81,7 @@ export function createMoon(scene) {
     group.position.y += Math.sin(elapsed * 0.6) * dt * 0.25;
     const s = 20 + Math.sin(elapsed * 1.2) * 0.7;
     glow.scale.setScalar(s);
-    halo.material.opacity = 0.13 + Math.sin(elapsed * 0.8) * 0.02;
+    halo.material.opacity = 0.012 + Math.sin(elapsed * 0.8) * 0.002;
 
     // she always faces you — the same face, from anywhere
     if (camera) {

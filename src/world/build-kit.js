@@ -18,8 +18,14 @@ export const seeded = (seed) => {
   let s = seed | 0;
   return () => { s = Math.imul(s ^ s >>> 16, 0x45d9f3b); s = Math.imul(s ^ s >>> 16, 0x45d9f3b); s ^= s >>> 16; return (s >>> 0) / 4294967296; };
 };
+// Self-lit colours: window glass, lamp bulbs, headlights, stove fire. These
+// stay unlit (the day cycle dims the window/fire ones by day). Every other
+// `flat` detail is an ordinary lit surface, so it doesn't glow in the dark.
+const GLOWING = new Set([LOCAL.warm, '#e8be83', '#cabb8c', '#fff6c8', '#e8984a']);
 export function flat(color) {
-  if (!flatCache.has(color)) flatCache.set(color, new THREE.MeshBasicMaterial({ color }));
+  if (!flatCache.has(color)) {
+    flatCache.set(color, GLOWING.has(color) ? new THREE.MeshBasicMaterial({ color }) : toonMaterial(color, { paint: 0.02 }));
+  }
   return flatCache.get(color);
 }
 function geometry(key, create) {
@@ -118,11 +124,12 @@ export function batchStatic(root) {
   root.traverse((o) => {
     if (!o.isMesh || o.isSkinnedMesh || o.isInstancedMesh || Array.isArray(o.material) || o.material.transparent) return;
     for (let p = o; p && p !== root; p = p.parent) if (p.userData.dynamic) return;
-    // Plain toon colours are baked into vertex colours so a district draws in
-    // a handful of calls instead of one per paint colour.
-    const m = o.material, bake = m.isMeshToonMaterial && !m.map;
-    const key = bake ? `bake|${m.side}|${m.userData.paint ?? 0.045}|${o.castShadow}|${o.receiveShadow}` : `${m.uuid}|${o.castShadow}|${o.receiveShadow}`;
-    if (bake && !baked.has(key)) baked.set(key, toonMaterial(0xffffff, { vertexColors: true, side: m.side, paint: m.userData.paint ?? 0.045 }));
+    // Plain surface colours are baked into vertex colours so a district draws
+    // in a handful of calls instead of one per paint colour. Roughness and
+    // metalness stay part of the bucket key, so metal never turns to plaster.
+    const m = o.material, bake = !!m.userData.bakeable && !m.map;
+    const key = bake ? `bake|${m.side}|${m.userData.paint ?? 0.045}|${m.roughness}|${m.metalness}|${o.castShadow}|${o.receiveShadow}` : `${m.uuid}|${o.castShadow}|${o.receiveShadow}`;
+    if (bake && !baked.has(key)) baked.set(key, toonMaterial(0xffffff, { vertexColors: true, side: m.side, paint: m.userData.paint ?? 0.045, roughness: m.roughness, metalness: m.metalness }));
     const b = buckets.get(key) ?? { material: bake ? baked.get(key) : m, cast: o.castShadow, receive: o.receiveShadow, geometries: [], sourceRanges: [], triangles: 0 };
     const geo = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
     geo.clearGroups(); geo.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inverse, o.matrixWorld));

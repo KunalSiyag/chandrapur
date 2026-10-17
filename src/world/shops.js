@@ -131,7 +131,7 @@ function makeBuilding(o) {
 
   if (o.awning) {
     const stripes = makeAwningTexture();
-    const aw = new THREE.Mesh(new THREE.BoxGeometry(o.w * 0.9, 0.06, 1.1), new THREE.MeshBasicMaterial({ map: stripes }));
+    const aw = new THREE.Mesh(new THREE.BoxGeometry(o.w * 0.9, 0.06, 1.1), toonMaterial(0xffffff, { paint: 0.015, map: stripes }));
     aw.position.set(0, 2.75, zF + 0.55);
     aw.rotation.x = 0.28;
     aw.castShadow = true;
@@ -146,7 +146,7 @@ function makeBuilding(o) {
     const p = o.poster ?? { title: 'मेला 15 अगस्त', lines: ['station chowk', '7 बजे से · from 7 pm'] };
     const posterM = new THREE.Mesh(
       new THREE.PlaneGeometry(0.7, 0.95),
-      new THREE.MeshBasicMaterial({ map: makePosterTexture(p) }),
+      toonMaterial(0xffffff, { paint: 0.015, map: makePosterTexture(p) }),
     );
     posterM.position.set(-o.w * 0.22, 1.45, zF + 0.1);
     g.add(posterM);

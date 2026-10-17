@@ -8,7 +8,7 @@ import {
 import { addBoxRect } from './colliders.js';
 
 /**
- * Chandpur station — the hub. A mustard halt with a long veranda,
+ * Chandrapur station — the hub. A mustard halt with a long veranda,
  * deep eaves, a working clock and the yellow name board. A chai
  * stall steams on the platform; the last rake of the night waits
  * beyond it. Everything in town is measured from this front step.
@@ -122,7 +122,7 @@ export function createStation(scene) {
     ctx.beginPath(); ctx.moveTo(64, 64); ctx.lineTo(94, 78); ctx.stroke();
     ctx.fillStyle = '#222a38'; ctx.beginPath(); ctx.arc(64, 64, 6, 0, 7); ctx.fill();
   });
-  const clock = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.95), new THREE.MeshBasicMaterial({ map: clockTex }));
+  const clock = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.95), toonMaterial(0xffffff, { paint: 0.015, map: clockTex }));
   clock.position.set(0, 5.4, -8.05);
   B.add(clock);
   const clock2 = clock.clone();

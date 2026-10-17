@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { toonMaterial, getGradientMap } from '../core/toon.js';
+import { toonMaterial } from '../core/toon.js';
 import { shrubGeometry } from './foliage.js';
 import { LOCAL as C, group, mesh, box, cylinder, sphere, beam, flat, seeded, footprint, roundFootprint, compact } from './build-kit.js';
 import { textSign } from './props.js';
@@ -11,11 +11,11 @@ import { textSign } from './props.js';
 export const breeze = { value: 0 };
 const swayCache = new Map();
 
-/** Toon material whose vertices bend with height in the shared breeze. */
+/** Rough PBR foliage material whose vertices bend with height in the shared breeze. */
 export function swayMaterial(color = '#ffffff', { amp = 0.05, vertexColors = true } = {}) {
   const key = `${color}|${amp}|${vertexColors}`;
   if (swayCache.has(key)) return swayCache.get(key);
-  const m = new THREE.MeshToonMaterial({ color: new THREE.Color(color), gradientMap: getGradientMap(), vertexColors, side: THREE.DoubleSide });
+  const m = new THREE.MeshStandardMaterial({ color: new THREE.Color(color), roughness: 0.8, metalness: 0, vertexColors, side: THREE.DoubleSide });
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uBreeze = breeze; shader.uniforms.uAmp = { value: amp };
     shader.vertexShader = shader.vertexShader
@@ -31,7 +31,10 @@ export function swayMaterial(color = '#ffffff', { amp = 0.05, vertexColors = tru
         transformed.x += gust * uAmp * bendH * bendH;
         transformed.z += gust * uAmp * 0.45 * bendH * bendH;`);
     // foliage cards light evenly from both sides (no back-face darkening)
-    shader.fragmentShader = shader.fragmentShader.replace('float faceDirection = gl_FrontFacing ? 1.0 : - 1.0;', 'float faceDirection = 1.0;');
+    shader.fragmentShader = shader.fragmentShader.replace('float faceDirection = gl_FrontFacing ? 1.0 : - 1.0;', 'float faceDirection = 1.0;')
+      // sun-faded field colours, same treatment as the weathered surfaces
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        diffuseColor.rgb = mix(vec3(dot(diffuseColor.rgb, vec3(0.2126, 0.7152, 0.0722))), diffuseColor.rgb, 0.82) * 0.92;`);
   };
   m.customProgramCacheKey = () => `sway-${amp}-${vertexColors}`;
   swayCache.set(key, m);
@@ -502,7 +505,7 @@ export function makeBunting({ from, to, count = 14, sag = 0.4, colors = ['#e8558
   return g;
 }
 let buntingMat = null;
-function buntingMaterial() { return buntingMat ??= new THREE.MeshToonMaterial({ color: 0xffffff, gradientMap: getGradientMap(), side: THREE.DoubleSide }); }
+function buntingMaterial() { return buntingMat ??= new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.9, metalness: 0, side: THREE.DoubleSide }); }
 
 /** Paper kite (patang) high on the breeze, with its manjha string down to an anchor. */
 export function makeKite({ color = '#e8558a', color2 = '#ffd000', anchor = [0, 1, 0], height = 18, offset = [6, 0, 4] } = {}) {
@@ -515,7 +518,7 @@ export function makeKite({ color = '#e8558a', color2 = '#ffd000', anchor = [0, 1
   const tail = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.3, 3), toonMaterial(color2)); tail.position.y = -0.68; tail.rotation.z = Math.PI; kite.add(tail);
   const lineGeo = new THREE.BufferGeometry(); const linePts = new Float32Array(13 * 3);
   lineGeo.setAttribute('position', new THREE.BufferAttribute(linePts, 3));
-  const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: '#f6efe0', transparent: true, opacity: 0.7 })); line.frustumCulled = false; g.add(line);
+  const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: '#4a453e' })); line.frustumCulled = false; g.add(line);
   const A = new THREE.Vector3(...anchor), K = new THREE.Vector3();
   g.userData.update = (t) => {
     K.set(A.x + offset[0] + Math.sin(t * 0.7 + A.x) * 1.4, A.y + height + Math.sin(t * 1.1 + A.z) * 0.9, A.z + offset[2] + Math.cos(t * 0.5) * 1.1);
