@@ -6,7 +6,7 @@ import { Driver, rot, rotMul } from './people/anim.js';
 import { clamp, lerp, smooth, limb, ellipsoid, rbox, rings } from './people/skin.js';
 
 // ============================================================
-// The people of Chandpur, rebuilt the Sakura Crossing way:
+// The people of Chandrapur, rebuilt the Sakura Crossing way:
 // one skinned, painted person each — kurta-pyjama, sarees with
 // pleated drapes and swaying pallus, salwar-kameez — pouring
 // chai, fanning doorways, walking home with jhola bags,

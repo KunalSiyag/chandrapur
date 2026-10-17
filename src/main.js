@@ -116,8 +116,8 @@ const hud = createGameHUD({ onMoon: toggleMoon, onSound: toggleSound, onVoices: 
   onRestart: () => { try { localStorage.removeItem('chandrapur-save-v2'); localStorage.removeItem('chandpur-save-v2'); } catch { /* ok */ } location.reload(); } });
 const game = createGame({ scene, player, town, life, balloon, day, moon, music, voice, hud, toggleMoon });
 
-// decorative glows must not feed the ink pass: sprites, points, lines,
-// light pools/cones, halos go to layer 1 (colour pass only)
+// decorative glows (sprites, points, lines, light pools/cones, halos) live on
+// layer 1 so probes can tell them from solid geometry; the colour pass draws all layers
 scene.traverse((o) => {
   if (o.isSprite || o.isPoints || o.isLine) o.layers.set(1);
   else if (o.isMesh && (o.name === 'light-pool' || o.name === 'light-cone')) o.layers.set(1);

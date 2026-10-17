@@ -35,7 +35,7 @@ export function buildStationQuarter(root) {
   // of teleport buttons. The world map repeats the same physical graph.
   const notice = textSign({ text: 'आप यहाँ हैं · YOU ARE HERE', sub: 'BAZAAR → GHATS  ·  CROSSING → HILL VILLAGE', w: 3.0, h: 0.65, bg: C.green });
   notice.position.set(-7.3, 1.6, -8.92); g.add(notice);
-  const bill = poster({ title: 'चंदपुर समाचार', lines: ['last train · 22:15', 'bazaar opens at dawn', 'flight from river meadow'], w: 0.8, h: 1.02 });
+  const bill = poster({ title: 'चंद्रपुर समाचार', lines: ['last train · 22:15', 'bazaar opens at dawn', 'flight from river meadow'], w: 0.8, h: 1.02 });
   bill.position.set(3.3, 1.78, -8.95); g.add(bill);
   // Station-workers' houses are the connective tissue on the western return
   // lane. Their front doors and utility service face that lane.
@@ -89,7 +89,7 @@ function buildRailway(g) {
       window.rotation.y = s < 0 ? Math.PI : 0;
       for (const yy of [2.13, 2.37]) box(train, 1.02, 0.035, 0.035, '#778c95', cx - 5.2 + i * 1.48, yy, s * 1.31);
     }
-    const destination = textSign({ text: 'चंदपुर — देहरादून', sub: 'NIGHT PASSENGER', w: 2.1, h: 0.32, bg: '#bfae77', fg: '#263c4a' });
+    const destination = textSign({ text: 'चंद्रपुर — देहरादून', sub: 'NIGHT PASSENGER', w: 2.1, h: 0.32, bg: '#bfae77', fg: '#263c4a' });
     destination.position.set(cx, 3.0, 1.315); train.add(destination);
   }
   place(g, train, 3.2, RAIL_Z, 0, 0.69);

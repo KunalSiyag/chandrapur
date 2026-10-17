@@ -121,7 +121,7 @@ function buildingShell({ w, d, h, wall, trim, seed, shop = false, roof = true })
   return g;
 }
 
-export function makeShop({ w = 4.5, d = 5.2, h = 6.2, seed = 1, name = 'shop', text = 'चंदपुर भंडार', sub = 'GENERAL STORE',
+export function makeShop({ w = 4.5, d = 5.2, h = 6.2, seed = 1, name = 'shop', text = 'चंद्रपुर भंडार', sub = 'GENERAL STORE',
   wall = C.plaster, trim = C.indigo, kind = 'grocer', closed = false, balcony = true, awning = true } = {}) {
   const g = buildingShell({ w, d, h, wall, trim, seed, shop: true }); g.name = name;
   const f = d / 2;
@@ -372,7 +372,7 @@ export function makeRickshaw({ color = C.green, seed = 1 } = {}) {
   box(g, 0.95, 0.08, 0.12, C.timber, 0, 1.25, 0.91);
   plane(g, 0.87, 0.56, new THREE.MeshBasicMaterial({ color: '#526d79', transparent: true, opacity: 0.58, side: THREE.DoubleSide }), 0, 1.53, 0.79);
   for (const x of [-0.25, 0.25]) plane(g, 0.16, 0.11, flat('#dfce9c'), x, 0.95, 1.035);
-  const plate = textSign({ text: 'चंदपुर', sub: `UK 08 · ${2180 + seed}`, w: 0.6, h: 0.19, bg: '#c5b86a', fg: '#24343d' }); plate.position.set(0, 0.65, 1.04); g.add(plate);
+  const plate = textSign({ text: 'चंद्रपुर', sub: `UK 08 · ${2180 + seed}`, w: 0.6, h: 0.19, bg: '#c5b86a', fg: '#24343d' }); plate.position.set(0, 0.65, 1.04); g.add(plate);
   return g;
 }
 
@@ -568,7 +568,7 @@ export function makeRailwayStation({ seed = 1 } = {}) {
     beam(g, [x, 2.82, 3.22], [x - 0.45, 3.43, 3.22], 0.055, C.red);
   }
   box(g, 18.2, 0.22, 0.18, C.red, 0, 3.4, 3.22);
-  const name = textSign({ text: 'चंदपुर', sub: 'CHANDPUR · 642 m', w: 3.25, h: 0.91, bg: '#d4b85e', fg: '#27353b', accent: '#27353b' }); name.position.set(0, 3.05, 3.36); g.add(name);
+  const name = textSign({ text: 'चंद्रपुर', sub: 'CHANDRAPUR · 642 m', w: 3.25, h: 0.91, bg: '#d4b85e', fg: '#27353b', accent: '#27353b' }); name.position.set(0, 3.05, 3.36); g.add(name);
   // Clock remains visible from the return lane and upper terraces.
   box(g, 1.35, 2.1, 1.35, C.ochre, -4.65, 6.2, -0.62, 'station-clock-tower');
   const clockTex = makeCanvasTexture(128, 128, (ctx) => {

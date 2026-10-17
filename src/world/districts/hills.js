@@ -94,7 +94,7 @@ export function buildHillDistricts(root) {
   place(fort, gate, -81.4, -58.1, 0, PAD.y);
   place(fort, makeBench({ w: 2.0, stone: true }), -76.8, -56.2, 0, PAD.y);
   place(fort, makeStreetSign({ labels: ['देवस्थान / SHRINE', 'बस्ती / VILLAGE'], directions: [1, -1] }), -75.4, -64.5, 0, PAD.y);
-  const mapBoard = textSign({ text: 'चंदपुर की घाटी', sub: 'STATION · BAZAAR · RIVER · VALLEY VIEW', w: 2.7, h: 0.65, bg: '#52645b' });
+  const mapBoard = textSign({ text: 'चंद्रपुर की घाटी', sub: 'STATION · BAZAAR · RIVER · VALLEY VIEW', w: 2.7, h: 0.65, bg: '#52645b' });
   mapBoard.position.set(-69.4, PAD.y + 0.84, -55.4); mapBoard.rotation.x = -0.32; fort.add(mapBoard);
   cylinder(fort, 0.04, 0.05, 0.73, C.timber, -70.3, PAD.y + 0.37, -55.45, 6);
   cylinder(fort, 0.04, 0.05, 0.73, C.timber, -68.5, PAD.y + 0.37, -55.45, 6);

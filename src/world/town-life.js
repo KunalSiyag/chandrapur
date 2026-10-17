@@ -26,7 +26,7 @@ function person({ key, seed, female = false, height = female ? 1.57 : 1.67, outf
 }
 
 export function createTownLife(scene, { player }) {
-  const root = group('living-chandpur'), updaters = [], residents = [], animals = [];
+  const root = group('living-chandrapur'), updaters = [], residents = [], animals = [];
   scene.add(root);
   const delta = new THREE.Vector3(), look = new THREE.Vector3();
   let lastTime = 0;

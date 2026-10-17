@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-// Chandpur: a single lower-hill river valley. All coordinates and grades are
+// Chandrapur: a single lower-hill river valley. All coordinates and grades are
 // original. Route data is shared by civil works, feet, navigation and checks.
 export const WORLD_STAGE = 'full';
 export const WORLD_BOUNDS = { x0: -110, x1: 93, z0: -100, z1: 94 };
@@ -24,7 +24,7 @@ export const MOON_HOME = new THREE.Vector3(76, 51, 133);
 export const MOON_DOWN = new THREE.Vector3(49, 12, 76);
 
 export const DISTRICTS = [
-  { id: 'station', name: 'Old Railway Station', hi: 'चंदपुर स्टेशन', anchor: [0, 0, -2], radius: 21, stage: 'river' },
+  { id: 'station', name: 'Old Railway Station', hi: 'चंद्रपुर स्टेशन', anchor: [0, 0, -2], radius: 21, stage: 'river' },
   { id: 'bazaar', name: 'Old Bazaar', hi: 'पुराना बाज़ार', anchor: [18, 0, 24], radius: 22, stage: 'river' },
   { id: 'river', name: 'Riverside Ghats', hi: 'नदी के घाट', anchor: [24, -0.15, 49], radius: 17, stage: 'river' },
   { id: 'village', name: 'Hill Village', hi: 'पहाड़ी बस्ती', anchor: [-48, 10.5, -39], radius: 19, stage: 'hills' },

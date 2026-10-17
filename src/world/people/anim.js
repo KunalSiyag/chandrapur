@@ -1,4 +1,4 @@
-// Pose driver for the people of Chandpur, ported from Sakura Crossing:
+// Pose driver for the people of Chandrapur, ported from Sakura Crossing:
 // reset, planted-feet leg IK, arm FK/IK, look-at, breathing, blinking,
 // wind on hair chains & skirt bones. All deterministic from (t, dt).
 // The town's breeze is a local constant (no shared uniforms here).

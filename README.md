@@ -13,10 +13,17 @@ light the ghats — and bring down the moon.
 - **A soundtrack made with [ACE-Step](https://github.com/ace-step/ACE-Step).**
   An original Hindi song, *Chanda Utar Aa* (“Moon, Come Down”), plays over the
   finale with synced lyrics, and a bansuri-and-santoor piece scores the day.
-- **A realistic atmosphere.** Physically based materials and sky, golden-hour
-  haze, blue dusk, moonlit nights, wind and river ambience.
+- **A realistic atmosphere.** Physically based materials, a physical sky that
+  lights the scene, valley haze that matches the horizon, AgX filmic exposure
+  through the day, moonlit nights, wind and river ambience.
 
-<!-- screenshots -->
+![Dusk on the river ghats](docs/images/realistic-dusk-river.jpg)
+
+| | |
+|---|---|
+| ![Talking to Ramu Chaiwala](docs/images/voice-chat-ramu.jpg) | ![The moon comes down to the river](docs/images/realistic-night-moon-finale.jpg) |
+| ![Chandrapur station, morning](docs/images/realistic-day-station.jpg) | ![The mustard fields](docs/images/realistic-day-farms.jpg) |
+| ![Station at dusk](docs/images/realistic-dusk-station.jpg) | ![The bazaar at night](docs/images/realistic-night-bazaar.jpg) |
 
 ```sh
 npm install
@@ -133,8 +140,17 @@ crickets by night, temple bells and fireworks.
 - **Pickups** (`src/game/pickups.js`): marigolds, mangoes, old rupee coins on
   every lane, an objective marker and fireworks.
 - **Day cycle** (`src/world/daycycle.js`, `src/world/sky.js`): about a 12-minute
-  day. Sun, sky, fog, lights, windows, lamp glows, river colour and exposure
-  all follow the hour.
+  day. A Preetham physical sky (with stars and moon glow at night) drives the
+  sun's colour, the hemisphere light and a PMREM environment map that is
+  rebuilt only when the sun has moved; fog, windows, lamp glows, river colour
+  and exposure all follow the hour.
+- **Rendering** (`src/core/toon.js`, `src/core/post.js`, `src/core/renderer.js`,
+  `src/world/river.js`): `MeshStandardMaterial` everywhere with surface presets
+  (plaster, earth, wood, cloth, foliage, metal, water…) and subtle world-space
+  weathering; height-aware fog thicker in the valley; HDR pipeline with
+  half-res ambient occlusion, bloom on bright sources only, a glare veil
+  toward the sun or moon, AgX tone mapping, vignette and grain; silty
+  reflective river water.
 - **Farms** (`src/world/farm-kit.js`, `src/world/districts/farms.js`):
   instanced crops swaying in a shared breeze, terraced plots cut into the
   terrain (`FARM_PLOTS` in `src/world/layout.js`).

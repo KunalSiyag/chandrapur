@@ -97,7 +97,7 @@ export function createStation(scene) {
 
   // the yellow station boards — platform side + square side
   const hangSign = (z, ry) => {
-    const s = textSign({ text: 'चंदपुर', sub: 'CHANDPUR', w: 3.6, h: 0.95, bg: '#e8c832', fg: '#1a1a1a', accent: '#1a1a1a' });
+    const s = textSign({ text: 'चंद्रपुर', sub: 'CHANDRAPUR', w: 3.6, h: 0.95, bg: '#e8c832', fg: '#1a1a1a', accent: '#1a1a1a' });
     s.position.set(0, 2.42, z);
     s.rotation.y = ry;
     B.add(s);

@@ -14,7 +14,7 @@ import { clearColliders } from './colliders.js';
 
 export function buildTown(scene) {
   clearColliders();
-  const root = group('chandpur-town'); scene.add(root);
+  const root = group('chandrapur-town'); scene.add(root);
   const districts = [buildCivilWorks(root), buildStationQuarter(root), buildBazaar(root), buildGhats(root)];
   if (stageIncludes('hills')) districts.push(...buildHillDistricts(root));
   const farms = buildFarms(root); districts.push(farms);

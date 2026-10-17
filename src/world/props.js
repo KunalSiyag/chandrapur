@@ -78,7 +78,7 @@ export function timetable({ w = 1.9, h = 1.15 } = {}) {
     ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 5; ctx.strokeRect(3, 3, W - 6, H - 6);
     ctx.fillStyle = '#111'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
     ctx.font = `bold 22px ${DE}`;
-    ctx.fillText('चंदपुर — CHANDPUR', 12, 10);
+    ctx.fillText('चंद्रपुर — CHANDRAPUR', 12, 10);
     ctx.font = `17px sans-serif`;
     const rows = [['6035 UP', '22:15', 'last ▲'], ['6036 DN', '05:40', 'first ▼'], ['—', '—', 'passenger halt']];
     rows.forEach((r, i) => ctx.fillText(`${r[0]}  ${r[1]}  ${r[2]}`, 14, 42 + i * 30));

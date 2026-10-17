@@ -1,4 +1,4 @@
-// The people of Chandpur, built the Sakura Crossing way: one SkinnedMesh
+// The people of Chandrapur, built the Sakura Crossing way: one SkinnedMesh
 // per person (welded smooth parts, GPU skinning — no joint seams), a painted
 // face atlas, and Indian garments — kurta-pyjama, saree with a pleated
 // drape and swaying pallu, salwar-kameez with dupatta, school uniforms —

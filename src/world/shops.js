@@ -266,7 +266,7 @@ export function createShops(scene) {
   // W3 — the hotel, bulbs strung, kitchen still glowing
   place(group, makeBuilding({
     w: 6.5, d: 6, h: 5, floors: 1, roof: 'gable', name: 'hotel',
-    wallColor: 0xa88868, roofColor: 0x54483c, signText: 'होटल चंदपुर', signSub: 'HOTEL CHANDPUR · PURE VEG',
+    wallColor: 0xa88868, roofColor: 0x54483c, signText: 'होटल चंद्रपुर', signSub: 'HOTEL CHANDRAPUR · PURE VEG',
     signBg: '#7a2c22', signFg: '#ffffff', noren: true, shopGlow: 0xffa04a, tank: false, toran: true,
   }), -8.2, 23.5, Math.PI / 2);
 

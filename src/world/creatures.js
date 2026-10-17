@@ -5,7 +5,7 @@ import { cow as makeCow } from './props.js';
 
 // ============================================================
 // The living town — inspired by Sakura Crossing's fauna, but
-// this is Chandpur, so: street cats on every good ledge, a
+// this is Chandrapur, so: street cats on every good ledge, a
 // decorated cow grazing the promenade (marigold wreath, bell,
 // a vermillion tikli), a mother cow and her calf on the south
 // bank, a peacock holding the sweets-shop ridge, pigeons on

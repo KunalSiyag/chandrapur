@@ -6,7 +6,7 @@ import { shrubGeometry, NIGHT_GREENS, NIGHT_GREENS_DARK } from './foliage.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // ============================================================
-// Chandpur's trees, after Sakura Crossing's foliage lesson:
+// Chandrapur's trees, after Sakura Crossing's foliage lesson:
 // canopies are welded cloud surfaces of round leaf puffs
 // (scalloped painted silhouettes, soft toon terminators —
 // never faceted low-poly balls), merged from several offset

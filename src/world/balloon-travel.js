@@ -241,7 +241,7 @@ function buildPassengerBalloon() {
   });
   const profile = [[0.43, 3.45], [0.82, 4.25], [1.7, 5.7], [2.8, 7.5], [3.25, 9], [3.1, 10.2], [2.55, 11.2], [1.6, 12.1], [0.55, 12.65], [0, 12.75]].map(([r, y]) => new THREE.Vector2(r, y));
   const envelope = mesh(g, new THREE.LatheGeometry(profile, 40), toonMaterial(0xffffff, { map: tex, emissiveMap: tex, emissive: '#dba864', emissiveIntensity: 0.15, side: THREE.DoubleSide, paint: 0.02 }), [0, 0, 0], 'passenger-balloon-envelope');
-  const serial = textSign({ text: 'चंदपुर', sub: 'VALLEY AIR · CP-01', w: 1.12, h: 0.42, bg: C.indigo }); serial.position.set(0, 0.63, d / 2 + 0.063); g.add(serial);
+  const serial = textSign({ text: 'चंद्रपुर', sub: 'VALLEY AIR · CP-01', w: 1.12, h: 0.42, bg: C.indigo }); serial.position.set(0, 0.63, d / 2 + 0.063); g.add(serial);
   const burnerGlow = lightPool(1.15, 0xffb66a, 0.07); burnerGlow.position.set(0, 0.238, 0); g.add(burnerGlow);
   return { group: g, envelope, flame, gate };
 }

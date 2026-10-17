@@ -10,7 +10,7 @@ import {
   makeBunting, makeKite, makeClothesline, makeMatkas, makeTubewell, makeWaysideShrine, makeLotusPond, makeEgret,
 } from '../farm-kit.js';
 
-// Chandpur's farmland: the mustard-and-wheat patchwork east of the station,
+// Chandrapur's farmland: the mustard-and-wheat patchwork east of the station,
 // flooded paddy terraces beyond the railway workers' lane, and a mango
 // orchard across the river. Interaction points are exported in `spots`.
 

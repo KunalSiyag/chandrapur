@@ -1,5 +1,5 @@
 // Per-character 512² canvas atlas, ported from Sakura Crossing for the people
-// of Chandpur. One painted face in "angle space", a white cell for
+// of Chandrapur. One painted face in "angle space", a white cell for
 // vertex-coloured parts, a hair tone ramp, and pattern cells.
 import * as THREE from 'three';
 

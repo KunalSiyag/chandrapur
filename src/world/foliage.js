@@ -1,4 +1,4 @@
-// Smooth cel-shaded foliage for Chandpur, ported from Sakura Crossing's
+// Smooth cel-shaded foliage for Chandrapur, ported from Sakura Crossing's
 // foliage library (the shrub core): welded, indexed cloud surfaces built
 // from round leaf puffs, with normals blended toward the ellipsoid so the
 // toon ramp gives soft painted terminators and clean scalloped silhouettes.
@@ -113,7 +113,7 @@ function icoBase(detail) {
 
 const _cache = new Map();
 
-// Chandpur's night-greens: moonlit crowns, cool shadowed bases
+// Chandrapur's night-greens: moonlit crowns, cool shadowed bases
 export const NIGHT_GREENS = { top: '#6cc48e', mid: '#38905f', base: '#1e5a48' };
 export const NIGHT_GREENS_DARK = { top: '#55a878', mid: '#2c7a50', base: '#1a4e40' };
 
