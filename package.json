@@ -1,0 +1,34 @@
+{
+  "name": "get-you-the-moon",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Chandpur: an explorable North Indian hill town, connected streets, railway station, bazaar, ghats, fort, shrine, and scenic balloon travel.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test:browser": "node agent/screenshot.js",
+    "test:player-pose": "node agent/check-player-pose.mjs",
+    "test:town": "node agent/check-town.mjs && node agent/check-walking.mjs && node agent/check-balloon.mjs && node agent/check-life.mjs && node agent/check-ui.mjs",
+    "screenshots:town": "node agent/town-shots.mjs",
+    "test:production": "node agent/check-production.mjs",
+    "agent": "node agent/agent.js"
+  },
+  "keywords": [
+    "three",
+    "toon",
+    "moon",
+    "cozy"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "openai": "^4.104.0",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0",
+    "vite": "^8.3.1"
+  }
+}
