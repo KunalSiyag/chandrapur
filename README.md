@@ -195,4 +195,7 @@ npm run build
 
 Music generated with [ACE-Step](https://github.com/ace-step/ACE-Step)
 (Apache-2.0) via its official Hugging Face Spaces; lyrics written for this
-project. Built with [three.js](https://threejs.org/) and Vite.
+project. Villager voices by Inworld TTS-2 via [GMI Cloud](https://www.gmicloud.ai/).
+People, foliage and creature techniques adapted from
+[Sakuragaoka Station](https://github.com/Kenton-GMI/sakuragaoka-station) (MIT).
+Built with [three.js](https://threejs.org/) and Vite. MIT licensed, see `LICENSE`.
