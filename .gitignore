@@ -1,9 +1,6 @@
 node_modules/
 dist/
 .env
-# Uncomment if your moon.mp3 has no redistribution rights
-# (the current file is procedurally generated in-house, so it stays):
-# public/audio/*.mp3
 agent/latest.png
 agent/moon-down.png
 # reference project cloned alongside (has its own repo)
@@ -12,3 +9,5 @@ sakuragaoka-station/
 music/takes/
 # verification screenshots (regenerate with the agent/ scripts)
 agent/shots/
+# agent worktrees
+.claude/worktrees/

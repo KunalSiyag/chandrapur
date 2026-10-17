@@ -1,8 +1,8 @@
-// The story of one Fasal Mela day in Chandpur. Each step is data: who to talk
+// The story of one Fasal Mela day in Chandrapur. Each step is data: who to talk
 // to, what to gather, where to go. The director (game.js) runs it.
 
 export const CHAPTERS = {
-  welcome: 'Welcome to Chandpur',
+  welcome: 'Welcome to Chandrapur',
   garlands: 'Garlands for the Mela',
   sarson: 'Sarson ke Khet',
   aam: 'Aam ka Mausam',
@@ -15,10 +15,10 @@ export const CHAPTERS = {
 export const STEPS = [
   { id: 'meet-ramu', chapter: 'welcome', title: 'Meet Ramu Chaiwala', objective: 'Talk to Ramu at the station chai stall', type: 'talk', npc: 'ramu',
     dialogue: [
-      ['ramu', 'Arre! A new face off the morning train? Welcome to Chandpur, beta!'],
+      ['ramu', 'Arre! A new face off the morning train? Welcome to Chandrapur, beta!'],
       ['ramu', 'You picked a lucky day — tonight is the Fasal Mela, our harvest fair. The whole valley comes down to the ghats when the moon rises.'],
       ['ramu', 'But Sharma ji at the sweet shop is in a proper panic about garlands. Go and see him in the Old Bazaar — just under the jhandiyan, east of this square.'],
-      ['ramu', 'And keep your eyes on the ground — old one-rupee coins everywhere! Half of Chandpur has holes in its pockets.'],
+      ['ramu', 'And keep your eyes on the ground — old one-rupee coins everywhere! Half of Chandrapur has holes in its pockets.'],
     ], reward: { rupees: 10 } },
   { id: 'see-sharma', chapter: 'garlands', title: 'The Sweet-Maker\'s Worry', objective: 'Find Sharma ji at his sweet shop in the Old Bazaar', type: 'talk', npc: 'sharma',
     dialogue: [
@@ -58,7 +58,7 @@ export const STEPS = [
   { id: 'ring-bell', chapter: 'bell', title: 'Ring the Temple Bell', objective: 'Ring the shrine bell at dusk', type: 'interact', object: 'shrine-bell', target: [-35, 25.5, -76.3] },
   { id: 'diyas', chapter: 'diyas', title: 'Light the Ghats', objective: 'Go down to the Riverside Ghats and light the diyas', type: 'diyas', count: 7, target: [25, -0.15, 50.8] },
   { id: 'moon', chapter: 'moon', title: 'Get You the Moon', objective: 'On the ghats, bring down the moon for the Mela  (press M)', type: 'moon', target: [25, -0.15, 49] },
-  { id: 'free', chapter: 'free', title: 'Shubh Fasal Mela!', objective: 'Explore Chandpur: find every rupee coin and every corner of the valley', type: 'free' },
+  { id: 'free', chapter: 'free', title: 'Shubh Fasal Mela!', objective: 'Explore Chandrapur: find every rupee coin and every corner of the valley', type: 'free' },
 ];
 
 export const DISCOVERY_REWARD = 10;

@@ -1,8 +1,8 @@
 {
-  "name": "get-you-the-moon",
+  "name": "chandrapur",
   "private": true,
-  "version": "1.0.0",
-  "description": "Chandpur: an explorable North Indian hill town, connected streets, railway station, bazaar, ghats, fort, shrine, and scenic balloon travel.",
+  "version": "2.0.0",
+  "description": "Chandrapur: a harvest-fair day in a North Indian railway town, built procedurally in Three.js, with villagers you can talk to by voice and a soundtrack generated with ACE-Step.",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -13,13 +13,22 @@
     "test:town": "node agent/check-town.mjs && node agent/check-walking.mjs && node agent/check-balloon.mjs && node agent/check-life.mjs && node agent/check-ui.mjs",
     "screenshots:town": "node agent/town-shots.mjs",
     "test:production": "node agent/check-production.mjs",
-    "agent": "node agent/agent.js"
+    "agent": "node agent/agent.js",
+    "start": "node server/serve.mjs",
+    "test:voice": "node agent/check-voice.mjs",
+    "test:audio": "node agent/check-audio.mjs",
+    "music": "uv run tools/acestep.py"
   },
   "keywords": [
     "three",
-    "toon",
-    "moon",
-    "cozy"
+    "webgl",
+    "game",
+    "india",
+    "ace-step",
+    "music-generation",
+    "voice",
+    "llm",
+    "npc"
   ],
   "author": "",
   "license": "MIT",
@@ -30,5 +39,9 @@
   "devDependencies": {
     "playwright": "^1.63.0",
     "vite": "^8.3.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KunalSiyag/chandrapur.git"
   }
 }

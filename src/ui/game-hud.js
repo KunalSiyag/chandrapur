@@ -2,8 +2,9 @@ import { FARM_PLOTS, POND, ROUTES, DISTRICTS, riverCentre, riverHalfWidth, groun
 import { oriented, circles } from '../world/colliders.js';
 
 /**
- * Festive game HUD for Chandpur: quest card, compass, minimap and clock,
- * wallet, interaction prompt, dialogue, banners, title screen, help and map.
+ * Festive game HUD for Chandrapur: quest card, compass, minimap and clock,
+ * wallet, interaction prompt, dialogue and free conversation (mic + text),
+ * song lyrics, banners, title screen, help and map.
  * Saffron, marigold, maroon and peacock-teal on warm paper; Baloo 2 type.
  */
 const X0 = -112, Z0 = -102, X1 = 96, Z1 = 96, S = 3;
@@ -105,17 +106,38 @@ const CSS = `
 .g-loader.hidden { opacity:0; pointer-events:none; }
 .g-loader .spin { width:46px; height:46px; margin:8px auto 0; border-radius:50%; border:6px dotted #7a1f2b; animation:spin 2s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
+.g-dialog .you { font-size:13px; color:#8a6a4a; font-weight:600; margin-top:4px; overflow-wrap:anywhere; }
+.g-dialog .you:empty { display:none; }
+.g-chat { display:flex; gap:8px; align-items:center; margin-top:10px; }
+.g-chat[hidden] { display:none; }
+.g-chat input { flex:1; min-width:0; font:600 16px 'Baloo 2', system-ui, sans-serif; padding:8px 12px 5px; border-radius:12px; border:2px solid #c9a46a; background:#fffdf6; color:var(--ink); }
+.g-chat input:focus-visible { outline:3px solid #0f6e73; outline-offset:1px; border-color:#0f6e73; }
+.g-mic { flex:none; width:46px; height:46px; border-radius:50%; border:2px solid #b8452a; background:linear-gradient(180deg,#fffaf0,#ffe6b0); font-size:20px; cursor:pointer; box-shadow:0 3px 0 #7a1f2b66; touch-action:manipulation; }
+.g-mic:hover { background:linear-gradient(180deg,#fff,#ffd27a); }
+.g-mic:focus-visible { outline:3px solid #0f6e73; outline-offset:3px; }
+.g-mic[aria-pressed="true"] { background:linear-gradient(180deg,#ff7a5a,#d4321f); color:#fff; animation:listen 1.1s ease-in-out infinite; }
+.g-mic[hidden] { display:none; }
+@keyframes listen { 50% { box-shadow:0 0 0 8px #d4321f33, 0 3px 0 #7a1f2b66; } }
+.g-chat-status { font-size:13px; font-weight:700; color:var(--teal); min-height:18px; margin-top:4px; overflow-wrap:anywhere; }
+.sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.g-lyric { position:absolute; left:50%; bottom:max(84px,env(safe-area-inset-bottom)); transform:translateX(-50%); width:min(820px,calc(100vw - 32px)); text-align:center; opacity:0; transition:opacity .6s; color:#fff; text-shadow:0 2px 6px #000c, 0 0 18px #000a; }
+.g-lyric.show { opacity:1; }
+.g-lyric .hi { font-size:30px; font-weight:800; line-height:1.15; text-wrap:balance; }
+.g-lyric .en { font-size:15px; font-weight:600; opacity:.9; font-style:italic; }
+.g-title .theme { margin-top:12px; font:700 14px 'Baloo 2',sans-serif; background:none; border:none; color:#0f6e73; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+.g-title .theme:hover { color:#7a1f2b; }
+.g-title .theme:focus-visible { outline:3px solid #0f6e73; outline-offset:3px; border-radius:6px; }
 @media (max-width:760px) {
   .g-quest { width:calc(100vw - 36px); top:12px; padding:10px 12px 8px; } .g-quest .title { font-size:16px; } .g-quest .obj { font-size:12px; }
   .g-compass { display:none; } .g-tr { top:auto; bottom:76px; right:12px; } .g-mini { width:112px; height:112px; } .g-district { display:none; }
   .g-btns { right:8px; bottom:12px; gap:4px; } .g-btn { padding:6px 8px 4px; font-size:12px; } .g-btn kbd { display:none; }
   .g-wallet { bottom:64px; left:10px; } .g-chip { font-size:13px; } .g-dialog { padding:14px 14px 12px 14px; } .g-dialog .face { display:none; }
-  .g-title .hi { font-size:46px; } .g-chapter .t { font-size:30px; } .g-notes { top:150px; }
+  .g-title .hi { font-size:46px; } .g-chapter .t { font-size:30px; } .g-notes { top:150px; } .g-lyric .hi { font-size:20px; }
 }
-@media (prefers-reduced-motion:reduce) { .g-chip.pop, .g-note, .g-dialog .next, .g-loader .spin { animation:none; } .g-banner, .g-chapter, .g-toast, .g-fade { transition:none; } }
+@media (prefers-reduced-motion:reduce) { .g-chip.pop, .g-note, .g-dialog .next, .g-loader .spin, .g-mic[aria-pressed="true"] { animation:none; } .g-banner, .g-chapter, .g-toast, .g-fade, .g-lyric { transition:none; } }
 `;
 
-export function createGameHUD({ onMoon, onSound, onCinematic, onInteract, onStart, onRestart, town, hasSave }) {
+export function createGameHUD({ onMoon, onSound, onVoices, voicesOn = true, onTheme, onCinematic, onInteract, onStart, onRestart, town, hasSave }) {
   const style = document.createElement('style'); style.textContent = CSS; document.head.appendChild(style);
   const root = document.createElement('div'); root.className = 'g'; root.hidden = true;
   root.innerHTML = `
@@ -124,11 +146,21 @@ export function createGameHUD({ onMoon, onSound, onCinematic, onInteract, onStar
     <div class="g-compass" aria-hidden="true"><canvas width="840" height="76"></canvas></div>
     <div class="g-tr"><div class="g-mini"><canvas width="340" height="340" aria-label="Minimap"></canvas></div>
       <div class="g-clock g-panel"><span class="ico">☀️</span><span class="time">9:00 AM</span><small class="phase">Morning</small></div>
-      <div class="g-district"><div class="hi">चंदपुर स्टेशन</div><div class="en">Old Railway Station</div></div></div>
+      <div class="g-district"><div class="hi">चंद्रपुर स्टेशन</div><div class="en">Old Railway Station</div></div></div>
     <div class="g-wallet"><div class="g-chip r" data-w="rupees">₹ <b>0</b></div><div class="g-chip" data-w="coins">🪙 <b>0</b></div>
       <div class="g-chip" data-w="marigold" hidden>🌼 <b>0</b></div><div class="g-chip" data-w="mango" hidden>🥭 <b>0</b></div><div class="g-chip" data-w="laddoo" hidden>🍬 <b>Laddoos</b></div></div>
     <div class="g-prompt" hidden><span class="g-key">E</span><span class="lbl"></span></div>
-    <div class="g-dialog g-panel" hidden><div class="face"></div><div class="who"></div><div class="text"></div><div class="next">E ▸</div></div>
+    <div class="g-dialog g-panel" hidden><div class="face" aria-hidden="true"></div><div class="who"></div><div class="text" aria-live="polite"></div><div class="you"></div>
+      <form class="g-chat" hidden autocomplete="off">
+        <button type="button" class="g-mic" aria-label="Speak to the villager" aria-pressed="false">🎙</button>
+        <label class="sr" for="g-say">What do you say?</label>
+        <input id="g-say" name="say" maxlength="300" spellcheck="true" enterkeyhint="send" placeholder="Ask about the Mela, the way, anything…">
+        <button class="g-btn" type="submit">Say</button>
+        <button class="g-btn" type="button" data-chat="bye">Goodbye <kbd>Esc</kbd></button>
+      </form>
+      <div class="g-chat-status" aria-live="polite" hidden></div>
+      <div class="next">E ▸</div></div>
+    <div class="g-lyric" aria-live="off"><div class="hi"></div><div class="en"></div></div>
     <div class="g-notes"></div>
     <div class="g-toast" role="status"></div>
     <div class="g-banner g-panel" role="status"><div class="k"></div><div class="t"></div><div class="s"></div><div class="rw"></div></div>
@@ -137,7 +169,8 @@ export function createGameHUD({ onMoon, onSound, onCinematic, onInteract, onStar
       <button class="g-btn" data-act="map">Map <kbd>Tab</kbd></button>
       <button class="g-btn" data-act="moon">🌙 Moon <kbd>M</kbd></button>
       <button class="g-btn" data-act="cinema">🎥 <kbd>C</kbd></button>
-      <button class="g-btn" data-act="sound" aria-pressed="true">🔊</button>
+      <button class="g-btn" data-act="sound" aria-pressed="true" aria-label="Music and sound">🔊</button>
+      <button class="g-btn" data-act="voices" aria-pressed="${voicesOn}" aria-label="Villager voices">${voicesOn ? '🗣️' : '💬'}</button>
       <button class="g-btn" data-act="help">? <kbd>H</kbd></button>
     </div>`;
   document.body.appendChild(root);
@@ -145,16 +178,19 @@ export function createGameHUD({ onMoon, onSound, onCinematic, onInteract, onStar
 
   // ---------------------------------------------------------------- loader + title
   const loader = document.createElement('div'); loader.className = 'g-loader';
-  loader.innerHTML = '<div class="hi">चंदपुर</div><div>Sowing the mustard, stringing the bunting…</div><div class="spin"></div>';
+  loader.innerHTML = '<div class="hi">चंद्रपुर</div><div>Sowing the mustard, stringing the bunting…</div><div class="spin"></div>';
   document.body.appendChild(loader);
   const title = document.createElement('div'); title.className = 'g-title';
-  title.innerHTML = `<div class="card g-panel"><div class="hi">चंदपुर</div><div class="en">CHANDPUR</div><div class="sub">Get You the Moon</div>
-    <p>A harvest-fair day in a little Indian railway town. Help the villagers get ready for the <b>Fasal Mela</b> — gather marigolds and mangoes, wander the mustard fields and paddies, fly the balloon, ring the shrine bell at dusk… and bring down the moon.</p>
+  title.innerHTML = `<div class="card g-panel"><div class="hi">चंद्रपुर</div><div class="en">CHANDRAPUR</div><div class="sub">Get You the Moon</div>
+    <p>A harvest-fair day in a little Indian railway town. Help the villagers get ready for the <b>Fasal Mela</b> — gather marigolds and mangoes, wander the mustard fields and paddies, fly the balloon, ring the shrine bell at dusk… and bring down the moon. Every villager talks back: speak to them, or type.</p>
     <div class="row"><button class="go" data-start="new">▶ Begin the Day</button><button class="go alt" data-start="continue" hidden>Continue</button></div>
-    <div class="keys"><b>WASD</b><span>walk · <b>Shift</b> run · <b>Space</b> jump</span><b>Mouse</b><span>click the world, then look around</span><b>E</b><span>talk · interact · board the balloon</span><b>Tab / M / C</b><span>map · moon · cinema</span></div></div>`;
+    <div class="keys"><b>WASD</b><span>walk · <b>Shift</b> run · <b>Space</b> jump</span><b>Mouse</b><span>click the world, then look around</span><b>E</b><span>talk · interact · board the balloon</span><b>T</b><span>chat freely with a villager (mic or text)</span><b>Tab / M / C</b><span>map · moon · cinema</span></div>
+    <button class="theme" type="button" aria-pressed="false">♪ Play the theme — “Chanda Utar Aa”</button></div>`;
   document.body.appendChild(title);
   if (hasSave?.()) title.querySelector('[data-start="continue"]').hidden = false;
-  title.addEventListener('click', (e) => {
+  title.addEventListener('click', async (e) => {
+    const theme = e.target.closest('.theme');
+    if (theme) { const on = await onTheme?.(); theme.setAttribute('aria-pressed', String(!!on)); theme.textContent = on ? '■ Stop the theme' : '♪ Play the theme — “Chanda Utar Aa”'; return; }
     const b = e.target.closest('[data-start]'); if (!b) return;
     title.hidden = true; root.hidden = false; onStart?.(b.dataset.start === 'new');
   });
@@ -164,10 +200,11 @@ export function createGameHUD({ onMoon, onSound, onCinematic, onInteract, onStar
     <p><b>Follow the quest card</b> (top left). The saffron marker and the compass point to your next goal; the minimap turns with you.</p>
     <p><b>WASD / arrows</b> walk · <b>Shift</b> run · <b>Space</b> jump · <b>mouse</b> look (click the world first) · <b>wheel</b> camera distance</p>
     <p><b>E</b> talk to people, light diyas, rest on a charpai, ring the bell, and board or leave the balloon at a landing.</p>
+    <p><b>T</b> chat freely with the nearest villager: press <b>🎙</b> and speak (Chrome or Edge), or type. They know the hour, the valley and your quest. <b>🗣️</b> turns their voices on or off.</p>
     <p>Walk into floating <b>🌼 marigolds</b>, <b>🥭 mangoes</b> and old <b>🪙 rupee coins</b> to pick them up. Discovering a new district earns ₹${10}.</p>
     <p><b>Tab</b> map · <b>M</b> bring down the moon · <b>C</b> cinema view · <b>Esc</b> release the mouse. Progress saves automatically.</p>
     <p class="row"><button class="g-btn" data-act="restart">Start a new day (reset progress)</button></p>`);
-  const mapSheet = sheet('map', `<button class="g-btn close">Close</button><h2>The Valley of Chandpur</h2><div>Saffron marker: your objective. Every place is connected on foot; the balloon flies between the River Meadow and the Fort Shoulder.</div><canvas width="${(X1 - X0) * S}" height="${(Z1 - Z0) * S}"></canvas>`);
+  const mapSheet = sheet('map', `<button class="g-btn close">Close</button><h2>The Valley of Chandrapur</h2><div>Saffron marker: your objective. Every place is connected on foot; the balloon flies between the River Meadow and the Fort Shoulder.</div><canvas width="${(X1 - X0) * S}" height="${(Z1 - Z0) * S}"></canvas>`);
   mapSheet.classList.add('g-map');
   function sheet(name, html) {
     const el = document.createElement('div'); el.className = 'g-sheet'; el.hidden = true; el.dataset.sheet = name;
@@ -184,6 +221,7 @@ export function createGameHUD({ onMoon, onSound, onCinematic, onInteract, onStar
     if (show) { document.exitPointerLock?.(); if (el === mapSheet) drawFullMap(); }
   }
   window.addEventListener('keydown', (e) => {
+    if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
     if (title.hidden === false) { if (e.code === 'Enter') title.querySelector('[data-start="' + (hasSave?.() ? 'continue' : 'new') + '"]').click(); return; }
     if (e.code === 'Tab') { e.preventDefault(); toggleSheet(mapSheet); }
     if (e.code === 'KeyH') toggleSheet(help);
@@ -191,6 +229,7 @@ export function createGameHUD({ onMoon, onSound, onCinematic, onInteract, onStar
   });
   root.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-act]');
+    if (e.target.closest('.g-chat')) return;
     if (e.target.closest('.g-dialog') || e.target.closest('.g-prompt')) { onInteract?.(); return; }
     if (!b) return;
     const act = b.dataset.act;
@@ -199,6 +238,7 @@ export function createGameHUD({ onMoon, onSound, onCinematic, onInteract, onStar
     if (act === 'moon') onMoon?.();
     if (act === 'cinema') onCinematic?.();
     if (act === 'sound') { const on = await onSound?.(); b.textContent = on ? '🔊' : '🔇'; b.setAttribute('aria-pressed', String(!!on)); }
+    if (act === 'voices') { const on = onVoices?.(); b.textContent = on ? '🗣️' : '💬'; b.setAttribute('aria-pressed', String(!!on)); }
   });
 
   // ---------------------------------------------------------------- map art
@@ -318,8 +358,37 @@ export function createGameHUD({ onMoon, onSound, onCinematic, onInteract, onStar
     set(promptLbl, label || '');
   }
 
+  // ---------------------------------------------------------------- free conversation
+  const chatForm = q('.g-chat'), chatInput = q('#g-say'), mic = q('.g-mic'), chatStatus = q('.g-chat-status'), youEl = q('.g-dialog .you');
+  const lyricEl = q('.g-lyric');
+  let chatHandlers = null;
+  chatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const text = chatInput.value.trim(); if (!text) return;
+    chatInput.value = ''; chatHandlers?.onSend(text);
+  });
+  mic.addEventListener('click', () => chatHandlers?.onMic());
+  q('[data-chat="bye"]').addEventListener('click', () => chatHandlers?.onClose());
+  window.addEventListener('keydown', (e) => { if (e.code === 'Escape' && chatHandlers) { e.preventDefault(); chatHandlers.onClose(); } });
+  const chat = {
+    open(handlers) {
+      chatHandlers = handlers; chatForm.hidden = false; chatStatus.hidden = false; mic.hidden = !handlers.canListen;
+      youEl.textContent = ''; chatStatus.textContent = '';
+      if (matchMedia('(pointer:fine)').matches) chatInput.focus();
+    },
+    close() { chatHandlers = null; chatForm.hidden = true; chatStatus.hidden = true; youEl.textContent = ''; mic.setAttribute('aria-pressed', 'false'); chatInput.blur(); },
+    you(text) { youEl.textContent = `You: ${text}`; },
+    status(text) { chatStatus.textContent = text; },
+    listening(on) { mic.setAttribute('aria-pressed', String(on)); },
+  };
+
   return {
-    root,
+    root, chat,
+    /** One lyric line of the song ({ hi, en }), or null to clear. */
+    lyric(line) {
+      if (line) { set(lyricEl.querySelector('.hi'), line.hi); set(lyricEl.querySelector('.en'), line.en); }
+      lyricEl.classList.toggle('show', !!line);
+    },
     get mapOpen() { return !mapSheet.hidden || !help.hidden; },
     get titleOpen() { return !title.hidden; },
     hideLoader() { paintBase(); loader.classList.add('hidden'); setTimeout(() => loader.remove(), 700); },
@@ -361,7 +430,9 @@ export function createGameHUD({ onMoon, onSound, onCinematic, onInteract, onStar
       const chars = [...line.text]; let i = 0; textEl.textContent = '';
       typing = { done: false, finish() { clearInterval(this.timer); textEl.textContent = line.text; this.done = true; } };
       typing.timer = setInterval(() => { i += 2; textEl.textContent = chars.slice(0, i).join(''); if (i >= chars.length) typing.finish(); }, 22);
-      dlg.querySelector('.next').textContent = line.more ? 'E ▸' : 'E ✓';
+      const next = dlg.querySelector('.next');
+      next.hidden = !!line.chat;
+      next.textContent = line.more ? 'E ▸' : 'E ✓  ·  T chat';
     },
     dialogTyping() { return typing && !typing.done; },
     finishTyping() { typing?.finish(); },

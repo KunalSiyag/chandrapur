@@ -1,13 +1,25 @@
 /**
- * Chandpur's sound: a generative raga for the day — tanpura drone, a breathy
- * bansuri improvising phrases in Raag Bhupali (Sa Re Ga Pa Dha), a soft
- * tabla theka — birdsong by day, crickets by night, and the original moon
- * lullaby (public/audio/moon.mp3) for the finale. Plus game sound effects.
+ * Chandrapur's sound. The score is recorded music rendered with ACE-Step
+ * (music/songs/*.json -> public/audio/*.mp3): a daytime bansuri/santoor bed,
+ * an optional night piece, and the song "Chanda Utar Aa" for the moon
+ * finale, with timed lyrics. Between pieces, or when a file is missing, a
+ * generative raga fills in — tanpura drone, a breathy bansuri improvising in
+ * Raag Bhupali (Sa Re Ga Pa Dha), a soft tabla theka. Under it all runs a
+ * field-recording-style ambience: wind, the river, birds by day, crickets by
+ * night. Music ducks while a villager speaks. Plus game sound effects.
  * WebAudio only; it all starts on the first user gesture.
  */
+const TRACKS = {
+  day: 'audio/chandrapur-din.mp3',
+  night: 'audio/ghat-ki-raat.mp3',
+  song: 'audio/chanda-utar-aa.mp3',
+};
+const LYRICS = 'audio/chanda-utar-aa.lyrics.json';
+const RAGA_LEVEL = 0.55, BED_LEVEL = 0.42, SONG_LEVEL = 0.95;
+
 export function createMusic() {
-  let ctx = null, master = null, musicBus = null, sfxBus = null, ambBus = null, reverb = null;
-  let playing = false, started = false, lullaby = null, lullabyGain = null, night = 0;
+  let ctx = null, master = null, musicBus = null, trackBus = null, musicOut = null, sfxBus = null, ambBus = null, reverb = null;
+  let playing = false, started = false, night = 0;
   const SA = 196; // G3 — a comfortable bansuri tonic
   const BHUPALI = [0, 2, 4, 7, 9]; // semitones: Sa Re Ga Pa Dha
   const ratio = (semi) => Math.pow(2, semi / 12);
@@ -17,9 +29,12 @@ export function createMusic() {
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     master = ctx.createGain(); master.gain.value = 0.7; master.connect(ctx.destination);
     reverb = ctx.createConvolver(); reverb.buffer = impulse(2.6); const wet = ctx.createGain(); wet.gain.value = 0.32; reverb.connect(wet).connect(master);
-    musicBus = ctx.createGain(); musicBus.gain.value = 0.55; musicBus.connect(master); musicBus.connect(reverb);
+    musicOut = ctx.createGain(); musicOut.connect(master); // ducked under speech
+    musicBus = ctx.createGain(); musicBus.gain.value = RAGA_LEVEL; musicBus.connect(musicOut); musicBus.connect(reverb);
+    trackBus = ctx.createGain(); trackBus.connect(musicOut);
     sfxBus = ctx.createGain(); sfxBus.gain.value = 0.8; sfxBus.connect(master); sfxBus.connect(reverb);
     ambBus = ctx.createGain(); ambBus.gain.value = 0.35; ambBus.connect(master);
+    startAir();
   }
   function impulse(seconds) {
     const n = Math.floor(ctx.sampleRate * seconds), b = ctx.createBuffer(2, n, ctx.sampleRate);
@@ -183,23 +198,94 @@ export function createMusic() {
     });
   }
 
-  async function startLullaby() {
-    ensure();
-    try {
-      if (!lullaby) {
-        const res = await fetch('audio/moon.mp3'); if (!res.ok) return;
-        const buf = await ctx.decodeAudioData(await res.arrayBuffer());
-        lullabyGain = ctx.createGain(); lullabyGain.gain.value = 0; lullabyGain.connect(master);
-        lullaby = ctx.createBufferSource(); lullaby.buffer = buf; lullaby.loop = true; lullaby.connect(lullabyGain); lullaby.start();
-      }
-      lullabyGain.gain.setTargetAtTime(0.8, ctx.currentTime, 1.5);
-      musicBus.gain.setTargetAtTime(0.12, ctx.currentTime, 1.5);
-    } catch { /* the raga keeps playing */ }
+  // ---------------------------------------------------------------- air: wind in the open, the river near the ghats
+  let windGain = null, riverGain = null, river = 0;
+  function loopNoise(filterType, freq, q) {
+    const src = ctx.createBufferSource(); src.buffer = noiseBuffer(4); src.loop = true;
+    const f = ctx.createBiquadFilter(); f.type = filterType; f.frequency.value = freq; f.Q.value = q;
+    const g = ctx.createGain(); g.gain.value = 0;
+    src.connect(f).connect(g).connect(ambBus); src.start();
+    return { f, g };
   }
-  function stopLullaby() {
-    if (!ctx || !lullabyGain) return;
-    lullabyGain.gain.setTargetAtTime(0, ctx.currentTime, 1.2);
-    musicBus.gain.setTargetAtTime(0.55, ctx.currentTime, 1.2);
+  function startAir() {
+    const wind = loopNoise('lowpass', 420, 0.6); windGain = wind.g;
+    // gusts: a slow LFO on the cutoff
+    const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 0.07; lg.gain.value = 180;
+    lfo.connect(lg).connect(wind.f.frequency); lfo.start();
+    riverGain = loopNoise('bandpass', 950, 0.7).g;
+  }
+  function air() {
+    const t = ctx.currentTime;
+    windGain.gain.setTargetAtTime(0.10 + night * 0.04, t, 2);
+    riverGain.gain.setTargetAtTime(river * 0.22, t, 0.8);
+  }
+
+  // ---------------------------------------------------------------- the recorded soundtrack
+  const tracks = {};
+  function track(name) {
+    if (tracks[name]) return tracks[name];
+    const el = new Audio(TRACKS[name]); el.preload = 'auto';
+    const gain = ctx.createGain(); gain.gain.value = 0;
+    ctx.createMediaElementSource(el).connect(gain); gain.connect(trackBus);
+    const t = { el, gain, ok: true, stopTimer: 0 };
+    el.addEventListener('error', () => { t.ok = false; });
+    return (tracks[name] = t);
+  }
+  function fadeIn(t, level, secs) {
+    clearTimeout(t.stopTimer);
+    t.el.play().catch(() => { t.ok = false; });
+    t.gain.gain.setTargetAtTime(level, ctx.currentTime, secs / 3);
+  }
+  function fadeOut(t, secs) {
+    t.gain.gain.setTargetAtTime(0, ctx.currentTime, secs / 3);
+    clearTimeout(t.stopTimer); t.stopTimer = setTimeout(() => t.el.pause(), secs * 1000 + 200);
+  }
+  let ragaLevel = RAGA_LEVEL;
+  function setRaga(level) {
+    if (level === ragaLevel) return;
+    ragaLevel = level; musicBus.gain.setTargetAtTime(level, ctx.currentTime, 1.5);
+  }
+
+  // A recorded piece plays through, then the valley rests on ambience and the
+  // raga for a while before the next one, like a film score, not a radio.
+  let bed = null, rest = 6;
+  function bedTick(dt) {
+    if (song) { setRaga(0); return; }
+    const want = night > 0.55 ? 'night' : 'day', cur = bed && tracks[bed];
+    if (cur && (bed !== want || cur.el.ended || !cur.ok)) { fadeOut(cur, 4); bed = null; rest = 30 + Math.random() * 40; }
+    if (!bed && (rest -= dt) <= 0) {
+      const t = track(want);
+      if (t.ok) { t.el.currentTime = 0; fadeIn(t, BED_LEVEL, 4); bed = want; } else rest = 90;
+    }
+    const sounding = bed && tracks[bed].ok && !tracks[bed].el.paused;
+    setRaga(sounding ? 0 : RAGA_LEVEL);
+  }
+
+  // The song, with lyric lines handed to the HUD as they come up.
+  let song = null, lyrics = null, onLyric = null, lyricIndex = -1;
+  async function startSong(lineCallback = null) {
+    ensure();
+    if (ctx.state === 'suspended') await ctx.resume();
+    const t = track('song'); if (!t.ok) return false;
+    onLyric = lineCallback; lyricIndex = -1;
+    if (!lyrics) lyrics = await fetch(LYRICS).then((r) => r.json()).then((j) => j.lines).catch(() => []);
+    if (bed) { fadeOut(tracks[bed], 2.5); bed = null; }
+    song = t; setRaga(0);
+    t.el.currentTime = 0; fadeIn(t, SONG_LEVEL, 2);
+    t.el.onended = () => stopSong();
+    return true;
+  }
+  function stopSong() {
+    if (!song) return;
+    fadeOut(song, 2.5); song = null; rest = 20;
+    if (lyricIndex !== -1) onLyric?.(null);
+    lyricIndex = -1;
+  }
+  function lyricTick() {
+    if (!song || !onLyric || !lyrics?.length) return;
+    const now = song.el.currentTime;
+    let i = -1; while (i + 1 < lyrics.length && lyrics[i + 1].t <= now) i++;
+    if (i !== lyricIndex) { lyricIndex = i; onLyric(i >= 0 && lyrics[i].hi ? lyrics[i] : null); }
   }
 
   let interval = null;
@@ -211,17 +297,30 @@ export function createMusic() {
     if (!started) { started = true; nextBar = ctx.currentTime + 0.2; }
     else nextBar = Math.max(nextBar, ctx.currentTime + 0.1);
     interval = setInterval(schedule, 250); schedule();
+    for (const t of Object.values(tracks)) if (t.resume) { t.resume = false; t.el.play().catch(() => {}); }
   }
   async function pause() {
     playing = false; clearInterval(interval);
+    for (const t of Object.values(tracks)) if (!t.el.paused) { t.resume = true; t.el.pause(); }
     if (ctx && ctx.state === 'running') await ctx.suspend();
   }
   return {
-    play, pause, sfx, startLullaby, stopLullaby,
+    play, pause, sfx, startSong, stopSong,
     async toggle() { if (playing) { await pause(); return false; } await play(); return true; },
     setVolume(v) { ensure(); master.gain.value = v; },
     setNight(n) { night = n; },
-    tick(dt) { ambient(dt); },
+    /** 0..1, how close the listener is to running water. */
+    setRiver(v) { river = v; },
+    /** Lower the music while someone speaks. */
+    duck(on) { if (ctx) musicOut.gain.setTargetAtTime(on ? 0.3 : 1, ctx.currentTime, on ? 0.15 : 0.6); },
+    tick(dt) { if (!playing || !ctx) return; ambient(dt); air(); bedTick(dt); lyricTick(); },
     get playing() { return playing; },
+    get songPlaying() { return !!song; },
+    /** For automated checks: which pieces are loaded, sounding, and where. */
+    get debug() {
+      return { bed, ragaLevel, song: !!song, lyricIndex,
+        tracks: Object.fromEntries(Object.entries(tracks).map(([k, t]) => [k, { ok: t.ok, paused: t.el.paused, time: t.el.currentTime }])) };
+    },
+    seekSong(seconds) { if (song) song.el.currentTime = seconds; },
   };
 }

@@ -4,8 +4,9 @@ import { Driver } from '../world/people/anim.js';
 import { rings } from '../world/people/skin.js';
 import { propLathi, propJhola, propMatka } from '../world/people.js';
 import { surfaceY } from '../world/layout.js';
+import { CHARACTERS } from './characters.js';
 
-// The talkable people of Chandpur. New farm folk are built here; the town's
+// The talkable people of Chandrapur (who they are: characters.js). New farm folk are built here; the town's
 // existing residents (chaiwala, sweet-maker, balloon keeper…) are adopted by
 // key so they can speak too. Positions are where they stand in the world.
 
@@ -42,32 +43,7 @@ function person({ key, seed, female = false, kid = false, height, outfit, props 
     hairTex: gray ? GRAY : HAIR, hairStyle: female ? 'bun' : 'short', outfit, props, variants: ['open', 'blink', 'talk'] });
 }
 
-export const NPC_INFO = {
-  ramu: { name: 'Ramu Chaiwala', hi: 'रामू चायवाला', role: 'Station chai stall', color: '#c05a1a',
-    idle: ['Garam chai! Ten rupees, and the best view of the 6:40 passenger.', 'Arre, sip slowly — the kulhad keeps it hot.', 'Tonight the whole town goes to the Mela. Even the station dog.'] },
-  sharma: { name: 'Sharma ji', hi: 'शर्मा जी', role: 'Sweet-maker, Old Bazaar', color: '#d4321f',
-    idle: ['Jalebi fresh from the kadhai! Crisp outside, syrup inside.', 'A Mela without laddoos? Unthinkable.', 'My grandfather fried jalebis on this very corner.'] },
-  baldev: { name: 'Baldev Kaka', hi: 'बलदेव काका', role: 'Farmer, Sarson Fields', color: '#1f9a62',
-    idle: ['Sarson ka khet in full bloom — like the sun fell into my fields.', 'Hira and Moti are the best bullocks in the valley. Don\'t tell them, they\'ll get proud.', 'The tubewell runs sweet water all summer.'] },
-  chotu: { name: 'Chotu', hi: 'छोटू', role: 'Kite champion (self-declared)', color: '#e8558a',
-    idle: ['Look at my patang! Nobody can cut it — I use the best manjha!', 'Wo kaata! …oh wait, that was mine.', 'Didi says if I finish my homework I can fly till sunset.'] },
-  ganga: { name: 'Ganga Devi', hi: 'गंगा देवी', role: 'Paddy farmer', color: '#2f8a5e',
-    idle: ['Rice needs its feet in water and its head in the sun.', 'The egrets follow us all day, waiting for frogs.', 'Sit, beta. Have some gur with water.'] },
-  planter1: { name: 'Savitri', hi: 'सावित्री', role: 'Transplanting rice', color: '#e8558a',
-    idle: ['One seedling, two seedlings… a thousand to go!', 'We sing so the back doesn\'t notice.'] },
-  planter2: { name: 'Lakshmi', hi: 'लक्ष्मी', role: 'Transplanting rice', color: '#ffb000',
-    idle: ['Careful, the bund is slippery.', 'By the monsoon these will be taller than Chotu.'] },
-  munni: { name: 'Munni Didi', hi: 'मुन्नी दीदी', role: 'Mango orchard keeper', color: '#e8781a',
-    idle: ['Langra, Dussehri, Chausa — I know every tree by name.', 'Don\'t climb the old tree, it bites. Well, its ants do.', 'Try the jhoola! Everyone deserves a swing in mango season.'] },
-  dadaji: { name: 'Dadaji', hi: 'दादाजी', role: 'Elder of the banyan', color: '#8a6a3e',
-    idle: ['This bargad has seen four generations of my family.', 'In my day the moon came down for the Mela every year. Maybe she still does…', 'Sit in the shade, child. The fields will wait.'] },
-  bhola: { name: 'Captain Bhola', hi: 'कप्तान भोला', role: 'Balloon keeper, River Meadow', color: '#2f6db5',
-    idle: ['Step in the basket and press E — she flies to the Fort Shoulder.', 'Best view of the valley is from four hundred feet.', 'The burner is loud but the sky is quiet.'] },
-  nanaji: { name: 'Nanaji', hi: 'नानाजी', role: 'Hill village elder', color: '#647865',
-    idle: ['The shrine bell can be heard all the way to the river.', 'Climb slowly. The hill isn\'t going anywhere.'] },
-  kamla: { name: 'Kamla Tai', hi: 'कमला ताई', role: 'At the ghats', color: '#586f70',
-    idle: ['The river is kind this season.', 'At dusk the diyas float like little stars.'] },
-};
+export const NPC_INFO = CHARACTERS;
 
 const ADOPT = { 'station-chaiwala': 'ramu', 'sweets-shopkeeper': 'sharma', 'balloon-keeper': 'bhola', 'hill-grandfather': 'nanaji', 'river-water-carrier': 'kamla' };
 

@@ -1,4 +1,4 @@
-# Chandpur — screenshot and traversal review
+# Chandrapur — screenshot and traversal review
 
 Reviewed the rendered world, not only the route graph. Captures use the real
 toon/post pipeline at 1280 × 800 and paused simulation; the aerial views are

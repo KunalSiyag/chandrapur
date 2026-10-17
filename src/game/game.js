@@ -1,11 +1,14 @@
 import * as THREE from 'three';
 import { STEPS, CHAPTERS, DISCOVERY_REWARD } from './quests.js';
 import { createNPCs, NPC_INFO } from './npcs.js';
+import { HINTS } from './characters.js';
+import { createConversation } from './conversation.js';
 import { createPickups, createObjectiveMarker, createFireworks } from './pickups.js';
 import { diya } from '../world/props.js';
 import { surfaceY, DISTRICTS } from '../world/layout.js';
 
-const SAVE_KEY = 'chandpur-save-v2';
+const SAVE_KEY = 'chandrapur-save-v2';
+const OLD_SAVE_KEY = 'chandpur-save-v2'; // before the town was renamed
 const GHAT_DIYAS = [[17.6, 50.75], [20.1, 50.75], [22.6, 50.75], [25.1, 50.75], [27.6, 50.75], [30.1, 50.75], [32.6, 50.75]];
 const BELL = new THREE.Vector3(-35, 25.5, -76.3);
 
@@ -13,8 +16,13 @@ const BELL = new THREE.Vector3(-35, 25.5, -76.3);
  * The game director: quests, talk, pickups, interactables, discovery,
  * rewards, saving, and the moonlit finale. main.js feeds it input and time.
  */
-export function createGame({ scene, player, town, life, balloon, day, moon, music, hud, toggleMoon }) {
+export function createGame({ scene, player, town, life, balloon, day, moon, music, voice, hud, toggleMoon }) {
   const npcs = createNPCs(scene, { player, spots: town.spots, life });
+  const conversation = createConversation({ hud, voice, npcs, context: () => {
+    const s = STEPS[state.step];
+    const carrying = Object.entries(state.inv).filter(([, n]) => n > 0).map(([k, n]) => (k === 'laddoo' ? 'a box of laddoos' : `${n} ${k}${n > 1 ? 's' : ''}`)).join(', ');
+    return { clock: day.clock(), phase: day.phase(), district: lastDistrict?.name ?? '', quest: s.title, objective: objectiveText(s), carrying: carrying || 'nothing much' };
+  } });
   const marker = createObjectiveMarker(scene);
   const fireworks = createFireworks(scene);
   const state = { step: 0, rupees: 0, coins: new Set(), discovered: new Set(), inv: { marigold: 0, mango: 0, laddoo: 0 }, diyas: new Set(), finished: false };
@@ -41,7 +49,7 @@ export function createGame({ scene, player, town, life, balloon, day, moon, musi
   // ---------------------------------------------------------------- persistence
   function load() {
     try {
-      const raw = localStorage.getItem(SAVE_KEY); if (!raw) return false;
+      const raw = localStorage.getItem(SAVE_KEY) ?? localStorage.getItem(OLD_SAVE_KEY); if (!raw) return false;
       const s = JSON.parse(raw);
       state.step = Math.min(s.step ?? 0, STEPS.length - 1); state.rupees = s.rupees ?? 0;
       state.coins = new Set(s.coins ?? []); state.discovered = new Set(s.discovered ?? []);
@@ -57,7 +65,7 @@ export function createGame({ scene, player, town, life, balloon, day, moon, musi
     } catch { /* storage may be unavailable; the game still plays */ }
   }
   function queueSave() { saveTimer = 1.5; }
-  const hasSave = () => { try { return !!localStorage.getItem(SAVE_KEY); } catch { return false; } };
+  const hasSave = () => { try { return !!(localStorage.getItem(SAVE_KEY) ?? localStorage.getItem(OLD_SAVE_KEY)); } catch { return false; } };
 
   // ---------------------------------------------------------------- ghat diyas
   const diyaSlots = GHAT_DIYAS.map(([x, z], i) => {
@@ -147,9 +155,11 @@ export function createGame({ scene, player, town, life, balloon, day, moon, musi
     const info = NPC_INFO[who] ?? { name: who, hi: '', role: '', color: '#c05a1a' };
     hud.dialog({ name: info.name, hi: info.hi, role: info.role, color: info.color, text, more: dialog.i < dialog.lines.length - 1 });
     music.sfx.talk();
+    voice.speak(text, info.voice, who);
   }
   function advanceDialog() {
     if (hud.dialogTyping()) { hud.finishTyping(); return; }
+    voice.cancel();
     dialog.i++;
     if (dialog.i >= dialog.lines.length) {
       const done = dialog.onDone; dialog = null; hud.dialog(null); npcs.setTalking(null);
@@ -166,13 +176,7 @@ export function createGame({ scene, player, town, life, balloon, day, moon, musi
     }
     openDialog(lines);
   }
-  function hintFor(id) {
-    return {
-      ramu: 'At the chai stall by the station, where else!', sharma: 'His sweet shop is the first one in the Old Bazaar, under the bunting.',
-      baldev: 'Out east past the banyan, at the farmstead with the haystacks.', munni: 'Across the river, in the mango orchard east of the balloon meadow.',
-      bhola: 'He keeps the balloon on the River Meadow, across the footbridge.',
-    }[id] ?? 'Somewhere in the valley.';
-  }
+  const hintFor = (id) => HINTS[id] ?? 'Somewhere in the valley.';
 
   // ---------------------------------------------------------------- interactions
   const isEvening = () => day.night > 0.3 || day.dusk > 0.45;
@@ -190,7 +194,7 @@ export function createGame({ scene, player, town, life, balloon, day, moon, musi
     // the person the quest is about wins over a bystander standing nearby
     const cur = STEPS[state.step], questNpc = cur.type === 'talk' ? npcs.get(cur.npc) : null;
     const n = questNpc && Math.hypot(questNpc.position.x - p.x, questNpc.position.z - p.z) < 2.9 ? questNpc : npcs.nearest(p, 2.7);
-    if (n) return { label: `Talk to ${n.name}`, act: () => talkTo(n) };
+    if (n) return { label: `Talk to ${n.name}  ·  T chat`, act: () => talkTo(n), npc: n };
     for (const r of town.spots.rest) {
       if (Math.hypot(p.x - r.position[0], p.z - r.position[2]) < 2.0) {
         const evening = isEvening();
@@ -223,29 +227,44 @@ export function createGame({ scene, player, town, life, balloon, day, moon, musi
   return {
     npcs, pickups,
     get started() { return started; },
-    get blocking() { return !!dialog; },
+    get blocking() { return !!dialog || conversation.open; },
+    get chatting() { return conversation.open; },
+    /** T pressed: free conversation with whoever you are talking to, or the nearest villager. */
+    chat() {
+      if (!started || conversation.open) return false;
+      const n = (dialog && npcs.get(dialog.lines[dialog.i][0])) || interaction?.npc || npcs.nearest(player.position, 3.2);
+      if (!n) return false;
+      if (dialog) {
+        // a quest conversation finishes before free chat starts
+        const done = dialog.onDone; dialog = null; hud.dialog(null); voice.cancel(); done?.();
+      }
+      conversation.start(n);
+      return true;
+    },
+    endChat() { conversation.close(); },
     get target() { return currentTarget; },
     get state() { return state; },
     hasSave,
     start(fresh = true) {
-      if (fresh) { try { localStorage.removeItem(SAVE_KEY); } catch { /* ok */ } }
+      if (fresh) { try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem(OLD_SAVE_KEY); } catch { /* ok */ } }
       else load();
       coinTotal = pickups.scatterCoins(state.coins);
       started = true;
       refreshWallet(); enterStep();
       if (state.step === 0) setTimeout(() => hud.chapter(CHAPTERS.welcome, 'Find Ramu at the station chai stall'), 400);
-      else hud.chapter(CHAPTERS[STEPS[state.step].chapter], 'Welcome back to Chandpur');
+      else hud.chapter(CHAPTERS[STEPS[state.step].chapter], 'Welcome back to Chandrapur');
     },
     /** E pressed. Returns true if the game used it. */
     interact() {
       if (!started) return false;
+      if (conversation.open) return true;
       if (dialog) { advanceDialog(); return true; }
       if (interaction) { interaction.act(); return true; }
       return false;
     },
     onMoon(down) {
       const s = STEPS[state.step];
-      if (down) music.startLullaby(); else music.stopLullaby();
+      if (down) music.startSong((line) => hud.lyric(line)); else music.stopSong();
       if (down && s.type === 'moon') {
         fireworks.start(45); state.finished = true;
         setTimeout(() => { completeStep(); hud.finale({ rupees: state.rupees, coins: state.coins.size, coinsTotal: coinTotal, discovered: state.discovered.size, districts: DISTRICTS.length }); }, 3500);
@@ -277,8 +296,8 @@ export function createGame({ scene, player, town, life, balloon, day, moon, musi
       marker.set(target); marker.update(t, player.position);
       hud.setTarget(target);
       if (s.id === 'ring-bell') refreshQuest();
-      interaction = dialog ? { label: 'Continue' } : findInteraction();
-      hud.prompt(dialog ? null : interaction?.label ?? null);
+      interaction = conversation.open ? null : dialog ? { label: 'Continue' } : findInteraction();
+      hud.prompt(dialog || conversation.open ? null : interaction?.label ?? null);
       if (saveTimer > 0) { saveTimer -= dt; if (saveTimer <= 0) save(); }
     },
   };

@@ -17,6 +17,7 @@ import * as worldLayout from './world/layout.js';
 import * as worldCollisions from './world/colliders.js';
 import { createRiver } from './world/river.js';
 import { createMusic } from './audio/music.js';
+import { createVoice } from './audio/voice.js';
 import { createGameHUD } from './ui/game-hud.js';
 import { createGame } from './game/game.js';
 import { createAgentTools } from '../agent/tools.js';
@@ -41,6 +42,7 @@ const town = buildTown(scene);
 const river = createRiver(scene);
 
 const music = createMusic();
+const voice = createVoice({ onSpeaking: (on) => music.duck(on) });
 const player = createPlayer(input, cam.camera, { scene, solids: town.solids, spawn: new THREE.Vector3(3.2, 0, 1.0),
   onJump: () => music.sfx.whoosh() });
 const post = createPost(renderer, scene, cam.camera);
@@ -83,6 +85,15 @@ function toggleMoon() {
   return moonDown;
 }
 async function toggleSound() { return music.toggle(); }
+function toggleVoices() { voice.enabled = !voice.enabled; return voice.enabled; }
+async function toggleTheme() {
+  if (music.songPlaying) { music.stopSong(); return false; }
+  return music.startSong();
+}
+function chat() {
+  if (mode !== 'walk' || balloon.riding) return;
+  if (game.chat()) input.exitLock();
+}
 function toggleCinema() {
   if (!game.started) return;
   if (balloon.riding) { hud.toast('Look freely from the basket · cinema view returns after landing'); return; }
@@ -99,10 +110,11 @@ function startGame(fresh) {
   if (!capture) { music.play().catch(() => {}); renderer.domElement.requestPointerLock?.()?.catch?.(() => {}); }
 }
 
-const hud = createGameHUD({ onMoon: toggleMoon, onSound: toggleSound, onCinematic: toggleCinema, onInteract: interact, town,
-  onStart: startGame, hasSave: () => { try { return !!localStorage.getItem('chandpur-save-v2'); } catch { return false; } },
-  onRestart: () => { try { localStorage.removeItem('chandpur-save-v2'); } catch { /* ok */ } location.reload(); } });
-const game = createGame({ scene, player, town, life, balloon, day, moon, music, hud, toggleMoon });
+const hud = createGameHUD({ onMoon: toggleMoon, onSound: toggleSound, onVoices: toggleVoices, voicesOn: voice.enabled, onTheme: toggleTheme,
+  onCinematic: toggleCinema, onInteract: interact, town, onStart: startGame,
+  hasSave: () => { try { return !!(localStorage.getItem('chandrapur-save-v2') ?? localStorage.getItem('chandpur-save-v2')); } catch { return false; } },
+  onRestart: () => { try { localStorage.removeItem('chandrapur-save-v2'); localStorage.removeItem('chandpur-save-v2'); } catch { /* ok */ } location.reload(); } });
+const game = createGame({ scene, player, town, life, balloon, day, moon, music, voice, hud, toggleMoon });
 
 // decorative glows must not feed the ink pass: sprites, points, lines,
 // light pools/cones, halos go to layer 1 (colour pass only)
@@ -130,7 +142,7 @@ function renderFrame(time) {
   sky.follow(cam.camera);
   post.render(scene, cam.camera, day.leakSource(leakPos), time);
 }
-window.__town = { town, scene, camera: cam.camera, renderer, post, player, input, river, balloon, life, game, day, hud, layout: worldLayout, collisions: worldCollisions,
+window.__town = { town, scene, camera: cam.camera, renderer, post, player, input, river, balloon, life, game, day, hud, music, voice, layout: worldLayout, collisions: worldCollisions,
   setPaused(v) { debugPaused = v; },
   setDayTime(t) { day.set(t); },
   step(dt = 1 / 60) { simulationTime += dt; updateWorld(dt, simulationTime); },
@@ -171,6 +183,7 @@ window.addEventListener('keydown', (e) => {
   if (e.repeat || hud.mapOpen || hud.titleOpen || /^(BUTTON|INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   if (e.code === 'KeyM') toggleMoon();
   if (e.code === 'KeyC') toggleCinema();
+  if (e.code === 'KeyT') chat();
 });
 
 // ---- loop ----
@@ -193,7 +206,10 @@ function updateWorld(dt, t) {
   }
   moon.update(dt, t, cam.camera);
   day.update(dt);
-  music.setNight(day.night); music.tick(dt);
+  music.setNight(day.night);
+  const p = player.position, fromWater = Math.abs(p.z - worldLayout.riverCentre(p.x)) - worldLayout.riverHalfWidth(p.x);
+  music.setRiver(Math.max(0, Math.min(1, 1 - fromWater / 28)));
+  music.tick(dt);
   river.update(t, day.leakSource(leakPos));
   for (const u of updaters) u(t);
   const district = districtAt(player.position.x, player.position.z);

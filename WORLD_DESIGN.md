@@ -1,4 +1,4 @@
-# Chandpur — a town reached on foot
+# Chandrapur — a town reached on foot
 
 An original, fictional North Indian lower-hill railway town, just after the last
 passenger service. One river valley, one local building tradition: grey
