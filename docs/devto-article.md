@@ -63,7 +63,7 @@ Every NPC already had scripted quest lines. Now:
 
 ```
 🎙 speech recognition (en-IN) ─┐
-⌨  typed text                  ├─► POST /api/npc ─► any OpenAI-compatible chat model
+⌨  typed text                  ├─► POST /api/npc ─► GLM-5.3-Flash on GMI Cloud (any OpenAI-compatible model)
                                │    persona + valley + hour + place + quest + inventory
 🗣 scripted lines ◄── pre-rendered Inworld TTS-2 clips, directed per villager
    live replies   ◄── /api/tts → Inworld TTS-2 Flash on GMI Cloud (same voice, ~2 s)
