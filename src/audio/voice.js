@@ -1,11 +1,14 @@
+import { lineKey } from '../game/characters.js';
+
 /**
- * The villagers' voices. Speech synthesis speaks every line a villager says,
- * scripted or free, with a per-person voice, pitch and pace; speech
- * recognition hears what the visitor says back. When the server has a
- * speech model configured (/api/tts), villagers are acted by it instead;
- * otherwise the browser's voices speak (Chrome and Edge ship the best
- * Indian-English and Hindi ones). The game still works as text when
- * neither is available.
+ * The villagers' voices, best first:
+ *   1. pre-rendered neural lines (public/audio/voices, tools/render-voices.mjs)
+ *      for everything scripted: instant, and they work on a static deploy
+ *   2. live neural speech from the server (/api/tts) for free conversation
+ *   3. the browser's speech synthesis, with a per-person voice, pitch and pace
+ *      (Chrome and Edge ship the best Indian-English and Hindi voices)
+ * Speech recognition hears what the visitor says back. The game still works
+ * as text when none of it is available.
  */
 const PREF_KEY = 'chandrapur-voices';
 const FEMALE = /female|woman|heera|neerja|swara|kalpana|veena|lekha|aditi|raveena|zira|samantha|karen|moira|tessa/i;
@@ -17,6 +20,7 @@ export function createVoice({ onSpeaking } = {}) {
   const synth = window.speechSynthesis ?? null;
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition || null;
   let voices = [], speaking = 0, recognizer = null, neural = null, clip = null, token = 0;
+  const rendered = fetch('audio/voices/manifest.json').then((r) => r.json()).then((m) => new Set(m.lines)).catch(() => new Set());
   let enabled = (() => { try { return localStorage.getItem(PREF_KEY) !== 'off'; } catch { return true; } })();
 
   const load = () => { voices = synth?.getVoices() ?? []; };
@@ -45,6 +49,17 @@ export function createVoice({ onSpeaking } = {}) {
   function started() { speaking++; onSpeaking?.(true); }
   function ended() { speaking = Math.max(0, speaking - 1); if (!speaking) onSpeaking?.(false); }
 
+  /** Play one audio clip as the current line; resolves false if it would not play. */
+  function playClip(url, onDone) {
+    const a = new Audio(url); clip = a;
+    return new Promise((resolve) => {
+      let fin = false, played = false;
+      const done = () => { if (fin) return; fin = true; if (clip === a) clip = null; onDone?.(); if (played) ended(); resolve(played); };
+      a.onended = done; a.onerror = done; a.onpause = done;
+      a.play().then(() => { played = true; started(); }).catch(done);
+    });
+  }
+
   /** A villager's line through the server's speech model; false if it could not. */
   async function speakNeural(text, id, mine) {
     try {
@@ -52,14 +67,7 @@ export function createVoice({ onSpeaking } = {}) {
       if (!res.ok) return false;
       const url = URL.createObjectURL(await res.blob());
       if (mine !== token) { URL.revokeObjectURL(url); return true; }
-      const a = new Audio(url); clip = a;
-      await new Promise((resolve) => {
-        let fin = false;
-        const done = () => { if (fin) return; fin = true; if (clip === a) clip = null; URL.revokeObjectURL(url); ended(); resolve(); };
-        a.onended = done; a.onerror = done; a.onpause = done;
-        started(); a.play().catch(done);
-      });
-      return true;
+      return playClip(url, () => URL.revokeObjectURL(url));
     } catch { return false; }
   }
 
@@ -67,7 +75,15 @@ export function createVoice({ onSpeaking } = {}) {
     if (!enabled || !text) return;
     cancel();
     const mine = ++token;
-    if (id && await neuralOn() && await speakNeural(text, id, mine)) return;
+    if (id) {
+      const key = lineKey(id, text);
+      if ((await rendered).has(key)) {
+        if (mine !== token) return;
+        if (await playClip(`audio/voices/${key}.mp3`)) return;
+      }
+      if (mine !== token) return;
+      if (await neuralOn() && await speakNeural(text, id, mine)) return;
+    }
     if (mine !== token) return;
     return speakBrowser(text, character, id);
   }

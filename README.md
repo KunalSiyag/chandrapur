@@ -55,10 +55,11 @@ The 🗣️ button turns villager voices on and off; 🔊 toggles music and soun
 
 ```
  🎙 Web Speech recognition (en-IN)  ─┐
- ⌨  or typed text                   ├─► POST /api/npc ─► any OpenAI-compatible chat model
+ ⌨  or typed text                   ├─► POST /api/npc ─► GLM-5.3-Flash on GMI Cloud (any OpenAI-compatible model)
                                     │     persona + valley + hour + place + quest + inventory
- 🗣  reply spoken ◄── POST /api/tts (neural voice, per-character acting)
-                  ◄── or the browser's speech synthesis (per-character voice, pitch, pace)
+ 🗣  scripted lines ◄── public/audio/voices/*.mp3  (Inworld TTS-2, pre-rendered, directed per villager)
+    live replies   ◄── POST /api/tts  (Inworld TTS-2 Flash on GMI, same cast voice, cached)
+    no key/server  ◄── the browser's speech synthesis (per-character voice, pitch, pace)
 ```
 
 - **Who they are** lives in one file, `src/game/characters.js`: name, role,
@@ -70,23 +71,33 @@ The 🗣️ button turns villager voices on and off; 🔊 toggles music and soun
   production — so API keys never reach the browser. It caps input sizes,
   keeps the last 10 turns per villager, rate-limits, and strips reasoning
   tags from models that think out loud.
-- **Voices** (`src/audio/voice.js`): with `TTS_API_KEY` set, lines are acted
-  by an OpenAI-compatible speech model with per-character instructions
-  (accent, age, pace). Otherwise the browser speaks, picking Indian-English
-  or Hindi voices where available (Chrome and Edge have the best).
+- **A cast, not a voice.** Each villager has an Inworld voice and an acting
+  note in `characters.js`: Ramu is Manoj, Dadaji is Theodore (slow, hoarse,
+  storytelling), Chotu is a breathless nine-year-old, the women of the paddies
+  are Meher, Riya and Seema, all speaking Indian English (`en-IN`).
+- **Every scripted line is pre-rendered** (`npm run voices`, 132 lines, about
+  $0.21) into `public/audio/voices/` with a manifest, so quest dialogue plays
+  instantly and works even on a static deploy. Free-conversation replies are
+  voiced live through `/api/tts` with the faster Flash model, and every
+  rendered line is cached on disk (`.cache/voices`) so it's paid for once.
+  Without a provider the browser speaks, picking Indian-English or Hindi
+  voices where available (Chrome and Edge have the best).
+- **Fast enough to feel like talking.** The brain answers in about 1.6 s
+  (median); requests that stall are hedged with a second ask after 2.5 s.
 - **No key? Still works.** Without an LLM the villagers answer offline from
   their own lines and quest hints (“Where is Munni Didi?” → directions), and
   the music ducks whenever anyone speaks either way.
 
-Configure in `.env` (see `.env.example`):
+Configure in `.env` (see `.env.example`). One GMI Cloud key covers both the
+brain and the voices:
 
 ```sh
-LLM_API_KEY=...        LLM_BASE_URL=https://api.openai.com/v1   LLM_MODEL=gpt-4o-mini
-TTS_API_KEY=...        TTS_MODEL=gpt-4o-mini-tts                 # optional neural voices
+GMI_API_KEY=...        GMI_MODEL=zai-org/GLM-5.3-Flash
 ```
 
-Any OpenAI-compatible endpoint works: OpenAI, GMI Cloud (`GMI_API_KEY` is
-still honoured), OpenRouter, or a local Ollama / vLLM `/v1`.
+Or point the brain at any OpenAI-compatible endpoint (`LLM_API_KEY`,
+`LLM_BASE_URL`, `LLM_MODEL`: OpenAI, OpenRouter, a local Ollama / vLLM `/v1`)
+and the voices at `TTS_PROVIDER=openai` (`gpt-4o-mini-tts`).
 
 ## The soundtrack (ACE-Step)
 
@@ -170,7 +181,7 @@ back to offline answers and browser voices.
 ## Verification
 
 ```sh
-npm run test:voice     # stand-in LLM + TTS: walk to Ramu, T, ask, check the reply, context, voice, offline fallback
+npm run test:voice     # stand-in LLM + TTS: walk to Ramu, T, ask; reply, context, pre-rendered + live voice, stall hedging, offline fallback
 npm run test:audio     # ACE-Step day piece, night fallback, song + lyric captions on the moon finale
 npm run test:town      # (dev server on :5173) connectivity, walking, balloon, life, HUD
 node agent/playtest.mjs <out-dir> [--from <step>]   # drives the quest chain with screenshots

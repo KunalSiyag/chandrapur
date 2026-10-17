@@ -1,4 +1,4 @@
-import { CHARACTERS, HINTS } from './characters.js';
+import { CHARACTERS, HINTS, GREETINGS } from './characters.js';
 
 /**
  * Free conversation with a villager: the visitor speaks (microphone) or
@@ -81,7 +81,7 @@ export function createConversation({ hud, voice, npcs, context }) {
       if (!histories.has(n.id)) histories.set(n.id, []);
       open = { npc: n, history: histories.get(n.id) };
       npcs.setTalking(n);
-      const greet = histories.get(n.id).length ? 'Haan? Tell me.' : `Haan, ji? Ask me anything.`;
+      const greet = GREETINGS[histories.get(n.id).length ? 1 : 0];
       hud.dialog({ name: n.name, hi: n.hi, role: n.role, color: n.color, text: greet, chat: true });
       hud.chat.open({ canListen: voice.canListen, onSend: ask, onMic: listen, onClose: () => this.close() });
       if (!(await checkOnline())) hud.chat.status('Offline villagers — add an LLM key to .env for free conversation.');

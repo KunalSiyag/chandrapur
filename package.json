@@ -17,7 +17,8 @@
     "start": "node server/serve.mjs",
     "test:voice": "node agent/check-voice.mjs",
     "test:audio": "node agent/check-audio.mjs",
-    "music": "uv run tools/acestep.py"
+    "music": "uv run tools/acestep.py",
+    "voices": "node tools/render-voices.mjs"
   },
   "keywords": [
     "three",

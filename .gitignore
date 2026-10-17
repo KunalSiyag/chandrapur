@@ -11,3 +11,4 @@ music/takes/
 agent/shots/
 # agent worktrees
 .claude/worktrees/
+.cache/

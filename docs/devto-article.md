@@ -71,7 +71,8 @@ Every NPC already had scripted quest lines. Now:
 🎙 speech recognition (en-IN) ─┐
 ⌨  typed text                  ├─► POST /api/npc ─► any OpenAI-compatible chat model
                                │    persona + valley + hour + place + quest + inventory
-🗣 reply spoken ◄── /api/tts neural voice (per-character acting) or browser speech synthesis
+🗣 scripted lines ◄── pre-rendered Inworld TTS-2 clips, directed per villager
+   live replies   ◄── /api/tts → Inworld TTS-2 Flash on GMI Cloud (same voice, ~2 s)
 ```
 
 The design choices that mattered:
@@ -87,6 +88,20 @@ what you're carrying. So when you ask Ramu “what now?” at 4 pm with a bag of
 marigolds, he tells you to take them to Sharma ji under the bunting in the
 Old Bazaar — in character, in two sentences, because it's going to be read
 aloud.
+
+**A cast, not a voice.** Each villager has a voice and an acting note:
+Ramu is a chatty chai seller, Dadaji speaks slowly and a little hoarse,
+Chotu is a breathless nine-year-old. All 132 scripted lines are
+pre-rendered with Inworld TTS-2 (directed by those notes) for about twenty
+cents, so quest dialogue plays instantly — even from a static host with no
+server at all. Free-conversation replies go through the faster Flash model
+live. I checked every rendered clip against its script with Whisper.
+
+**One key.** GMI Cloud serves both halves: GLM-5.3-Flash for the brain
+(median 1.6 s in-character answer) and Inworld TTS through its request
+queue for the voices. A first version timed out and retried on the
+occasional stalled request (23 s waits); now a second request is fired
+after 2.5 s and whichever answers first wins.
 
 **Keys stay on the server.** The endpoint is a tiny Connect-style middleware
 that runs inside Vite in development (`configureServer` /

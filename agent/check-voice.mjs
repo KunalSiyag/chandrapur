@@ -2,6 +2,9 @@ import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import http from 'node:http';
 import assert from 'node:assert/strict';
+import os from 'node:os';
+import path from 'node:path';
+import fs from 'node:fs';
 
 // Villager conversation check, end to end: a stand-in OpenAI-compatible model,
 // the real Vite server pointed at it, and a browser that walks up to Ramu,
@@ -13,13 +16,14 @@ import assert from 'node:assert/strict';
 
 const LLM_PORT = 5191, APP_PORT = 5192;
 const seen = [], spoken = [];
-let llmUp = true;
+let llmUp = true, stallNext = false;
 const llm = http.createServer(async (req, res) => {
   let body = ''; for await (const c of req) body += c;
   if (!llmUp) { res.statusCode = 500; return res.end('{}'); }
   const msg = JSON.parse(body);
   if (req.url.endsWith('/audio/speech')) { spoken.push(msg); res.setHeader('Content-Type', 'audio/mpeg'); return res.end(Buffer.alloc(64)); }
   seen.push(msg);
+  if (stallNext) { stallNext = false; await new Promise((r) => setTimeout(r, 30000)); if (res.destroyed) return; }
   res.setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify({ id: 'x', object: 'chat.completion', created: 0, model: msg.model,
     choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: '<think>plan</think>Arre beta, Sharma ji is in the Old Bazaar, just under the bunting!' } }] }));
@@ -27,7 +31,8 @@ const llm = http.createServer(async (req, res) => {
 
 const vite = spawn('npx', ['vite', '--port', String(APP_PORT), '--strictPort', '--host', '127.0.0.1'], {
   env: { ...process.env, LLM_API_KEY: 'test', LLM_BASE_URL: `http://127.0.0.1:${LLM_PORT}/v1`, LLM_MODEL: 'stand-in',
-    TTS_API_KEY: 'test', TTS_BASE_URL: `http://127.0.0.1:${LLM_PORT}/v1` }, stdio: 'pipe', detached: true });
+    TTS_PROVIDER: 'openai', TTS_API_KEY: 'test', TTS_BASE_URL: `http://127.0.0.1:${LLM_PORT}/v1`,
+    TTS_CACHE_DIR: fs.mkdtempSync(path.join(os.tmpdir(), 'chandrapur-voices-')) }, stdio: 'pipe', detached: true });
 await new Promise((ok, fail) => {
   const t = setTimeout(() => fail(new Error('vite did not start')), 60000);
   vite.stdout.on('data', (d) => { if (String(d).includes('Local')) { clearTimeout(t); ok(); } });
@@ -39,6 +44,7 @@ try {
   catch { browser = await chromium.launch({ headless: true, executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox', '--disable-dev-shm-usage'] }); }
   const page = await browser.newPage({ viewport: { width: 1100, height: 720 } });
   const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+  const clips = []; page.on('request', (r) => { if (r.url().includes('/audio/voices/')) clips.push(r.url()); });
   const base = `http://127.0.0.1:${APP_PORT}`;
   assert.deepEqual(await (await fetch(`${base}/api/npc/status`)).json(), { enabled: true, tts: true }, 'conversation and voice APIs are on');
 
@@ -60,6 +66,8 @@ try {
   await page.keyboard.press('KeyE'); await step(2);
   await page.waitForTimeout(400);
   assert.match(await page.locator('.g-dialog .who').textContent(), /Ramu/, 'scripted dialogue opens');
+  await page.waitForTimeout(800);
+  assert.ok(clips.some((u) => /\/audio\/voices\/ramu-[0-9a-f]{8}\.mp3$/.test(u)), 'scripted line plays its pre-rendered voice');
 
   // T: free conversation (finishes the quest talk first)
   await page.keyboard.press('KeyT'); await step(2);
@@ -81,8 +89,16 @@ try {
   assert.equal(seen.at(-1).model, 'stand-in');
   const line = spoken.find((s) => /Old Bazaar/.test(s.input));
   assert.ok(line, 'the reply is sent to the speech model');
-  assert.match(line.instructions, /You are Ramu Chaiwala/, 'speech model is told who is speaking');
+  assert.match(line.instructions, /chai seller/, 'speech model is told who is speaking');
   assert.ok(['ash', 'onyx', 'echo', 'ballad', 'verse'].includes(line.voice), 'a male voice for Ramu');
+
+  // a stalled model request is hedged: a second ask answers within seconds
+  stallNext = true;
+  const asked = Date.now();
+  await page.locator('#g-say').fill('And Baldev Kaka?');
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(() => /And Baldev Kaka/.test(document.querySelector('.g-dialog .you').textContent) && !/thinking/.test(document.querySelector('.g-chat-status').textContent), null, { timeout: 15000 });
+  assert.ok(Date.now() - asked < 8000, `stalled request was hedged (${Date.now() - asked} ms)`);
 
   // model down: the offline villager still answers, with a hint
   llmUp = false;
@@ -100,7 +116,7 @@ try {
   assert.equal(await page.locator('.g-lyric .hi').textContent(), 'चंदा उतर आ');
 
   assert.equal(errors.length, 0, `browser errors: ${errors.join(' | ')}`);
-  console.log(JSON.stringify({ status: 'PASS', api: true, scriptedDialogue: true, chat: true, contextToModel: true, neuralVoice: true, offlineFallback: true, escape: true, lyrics: true }, null, 2));
+  console.log(JSON.stringify({ status: 'PASS', api: true, scriptedDialogue: true, chat: true, contextToModel: true, hedgedStall: true, preRendered: true, neuralVoice: true, offlineFallback: true, escape: true, lyrics: true }, null, 2));
 } finally {
   await browser?.close();
   try { process.kill(-vite.pid); } catch { /* already gone */ }
