@@ -1,11 +1,3 @@
----
-title: "Chandrapur: I gave a Three.js village an ACE-Step soundtrack and villagers you can actually talk to"
-tags: threejs, gamedev, ai, opensource
-draft: true
----
-
-<!-- DRAFT — not published. Cover image: docs/images/realistic-dusk-river.jpg (upload to DEV, then set main_image). -->
-
 **Chandrapur** is a small browser game about one day in a North Indian railway
 town: the day of the *Fasal Mela*, the harvest fair. You step off the morning
 train, help the villagers get ready — marigolds for the sweet-maker's garlands,
@@ -17,7 +9,9 @@ Everything you see is generated in code with Three.js: no 3D assets. This
 week I gave it three things it was missing — **a real soundtrack, villagers who
 talk back, and a realistic atmosphere** — and this post is about how.
 
-🎮 Code: https://github.com/KunalSiyag/chandrapur <!-- confirm once the repo is pushed -->
+🎮 **Code:** https://github.com/KunalSiyag/chandrapur · 🎵 **The song:** [chanda-utar-aa.mp3](https://github.com/KunalSiyag/chandrapur/blob/main/public/audio/chanda-utar-aa.mp3)
+
+![Ramu Chaiwala answering a question at the station chai stall](https://raw.githubusercontent.com/KunalSiyag/chandrapur/main/docs/images/voice-chat-ramu.jpg)
 
 ## 1. A soundtrack written as data, rendered with ACE-Step
 
@@ -38,7 +32,7 @@ Each song is a JSON file next to the code:
 }
 ```
 
-A 100-line script (`tools/acestep.py`, runnable with `uv run`) sends it to the
+A short script (`tools/acestep.py`, runnable with `uv run`) sends it to the
 official ACE-Step Hugging Face Space through `gradio_client` and saves each
 take with its seed. My laptop GPU has 4 GB, so ZeroGPU doing the work was the
 whole point.
@@ -49,9 +43,9 @@ Two things I learned the hard way:
   anonymous user's daily ZeroGPU quota. The v1 Space reserves far less, so the
   script supports both engines (`--engine v1|v15`), and v1 gets the lyrics in
   romanized Hindi, which it pronounces much better than Devanagari.
-- **Check that it actually sang your words.** I ran the take through Whisper:
-  “चंदा उतरा चंदा उतरा … माँ की लोरी बनके, आँखों में बस जा” — the chorus came
-  back nearly verbatim. Whisper's word timestamps then gave me line timings
+- **Check that it actually sang your words.** I ran the take through Whisper,
+  and the chorus came back nearly verbatim: *“चंदा उतरा, चंदा उतरा … माँ की
+  लोरी बनके, आँखों में बस जा”*. Whisper's word timestamps then gave me line timings
   for **on-screen karaoke** in Hindi and English during the finale.
 
 In the game, recorded pieces play through and then the valley rests on
@@ -84,10 +78,24 @@ uses the same file to build the system prompt. Ramu sounds like Ramu in both.
 
 **Context makes them feel intelligent, not the model size.** Each request
 carries the in-game clock, where you're standing, your current quest and
-what you're carrying. So when you ask Ramu “what now?” at 4 pm with a bag of
-marigolds, he tells you to take them to Sharma ji under the bunting in the
-Old Bazaar — in character, in two sentences, because it's going to be read
-aloud.
+what you're carrying, plus a short brief of the valley. The system prompt
+asks for one to three short sentences, because every answer is read aloud.
+A few real answers from Ramu, at the station, mid-afternoon:
+
+> **“Where is the mango orchard?”** — *Arre beta, Munni Didi's mango orchard
+> is across the river, ji. From my stall go…*
+>
+> **“What train did I come on?”** — *Arre beta, you came on the 6:40 passenger
+> this morning, I remember it well!*
+>
+> **“kya haal hai?”** — *Arre beta, sab khush-hal! Bas Fasal Mela ka josh
+> dekho — puri valley saja hui hai…*
+>
+> **“Are you an AI?”** — *Arre beta, what is this AI-AYE? I am Ramu, thirty
+> years at this stall…*
+
+The 6:40 passenger is in his idle lines; the orchard directions come from
+the valley brief; nobody told him to switch to Hinglish when you do.
 
 **A cast, not a voice.** Each villager has a voice and an acting note:
 Ramu is a chatty chai seller, Dadaji speaks slowly and a little hoarse,
@@ -98,14 +106,16 @@ server at all. Free-conversation replies go through the faster Flash model
 live. I checked every rendered clip against its script with Whisper.
 
 **One key.** GMI Cloud serves both halves: GLM-5.3-Flash for the brain
-(median 1.6 s in-character answer) and Inworld TTS through its request
-queue for the voices. A first version timed out and retried on the
-occasional stalled request (23 s waits); now a second request is fired
-after 2.5 s and whichever answers first wins.
+(median 1.6 s for an in-character answer) and Inworld TTS through its
+request queue for the voices. A first version timed out and retried on the
+occasional stalled request, which meant 23-second waits; now a second
+request is fired after 2.5 s and whichever answers first wins. (My first
+implementation of that hedge referenced a promise before it existed, so it
+never fired. The end-to-end test that forces a stalled request caught it.)
 
 **Keys stay on the server.** The endpoint is a tiny Connect-style middleware
 that runs inside Vite in development (`configureServer` /
-`configurePreviewServer`) and inside a 40-line Node server in production. It
+`configurePreviewServer`) and inside a 30-line Node server in production. It
 caps input sizes, keeps the last 10 turns per villager, rate-limits, and
 strips `<think>` blocks from reasoning models.
 
@@ -117,8 +127,9 @@ each one a distinct voice. The music ducks whenever anyone speaks.
 **Tested end to end.** `npm run test:voice` starts a stand-in
 OpenAI-compatible server, points Vite at it, then a Playwright browser walks
 up to Ramu, presses T, types a question, and checks the reply, the context
-the model received, the speech request, the offline fallback, and that typing
-“wasd” into the chat box never moves the player.
+the model received, that the scripted line played its pre-rendered clip,
+the live speech request, a forced stall, the offline fallback, and that
+typing “wasd” into the chat box never moves the player.
 
 ## 3. A realistic atmosphere
 
@@ -147,9 +158,15 @@ physically based:
 - **Water.** The river is dark and silty, with rippled normals reflecting the
   sky — and the moon's path on it when she comes down for the finale.
 
-| Before | After |
-|---|---|
-| ![before](BEFORE_IMAGE_URL) | ![dusk on the ghats](AFTER_IMAGE_URL) |
+Same camera, same hour (dusk), before and after:
+
+![Before: the station at dusk, cel-shaded](https://raw.githubusercontent.com/KunalSiyag/chandrapur/main/docs/images/before-toon-dusk-station.jpg)
+
+![After: the station at dusk, physically based](https://raw.githubusercontent.com/KunalSiyag/chandrapur/main/docs/images/realistic-dusk-station.jpg)
+
+And the finale, with the moon's reflection on the river:
+
+![The moon comes down to the river](https://raw.githubusercontent.com/KunalSiyag/chandrapur/main/docs/images/realistic-night-moon-finale.jpg)
 
 It's still a low-poly town, so it reads as a *realistically lit* stylised
 world rather than photoreal — which, honestly, is the look I wanted.
@@ -161,4 +178,9 @@ world rather than photoreal — which, honestly, is the look I wanted.
 - Let villagers react in the world, not just in words — point the way,
   walk you somewhere.
 
-*Music generated with ACE-Step (Apache-2.0). Lyrics written for the game.*
+Clone it, `npm install && npm run dev`, and press **Begin the Day**. With
+no key at all the villagers still speak their scripted lines and answer
+from what they know; add a GMI Cloud key to `.env` and they really talk.
+
+*Music generated with ACE-Step (Apache-2.0); villager voices by Inworld
+TTS-2 via GMI Cloud. Lyrics written for the game.*
