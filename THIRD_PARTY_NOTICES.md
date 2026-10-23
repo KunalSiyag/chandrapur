@@ -1,7 +1,5 @@
 # Third-party notices
 
-Third-party notice
-
 Parts of the people, foliage, tree and creature code (src/world/people*,
 src/world/foliage.js, src/world/trees.js, src/world/creatures.js) are adapted
 from Sakuragaoka Station (https://github.com/Kenton-GMI/sakuragaoka-station),
